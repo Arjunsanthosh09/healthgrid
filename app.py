@@ -5,7 +5,8 @@ from functools import wraps
 from datetime import datetime
 import pymysql
 import os
-
+import re
+import json   
 
 # =============================================
 # APP SETUP
@@ -1147,7 +1148,6 @@ def assign_doctor_to_patient():
     cur.close()
     conn.close()
     return redirect(url_for('hospital_admin_dashboard'))
-
 @app.route('/dashboard/doctor')
 @login_required
 @approved_required
@@ -1159,21 +1159,38 @@ def doctor_dashboard():
     conn = get_db()
     cur = conn.cursor()
     
-    # Get assigned patients
+    # Patients NOT prescribed today (waiting)
     cur.execute("""
         SELECT p.id, p.full_name, p.age, p.gender, p.blood_group, p.allergies,
                p.chronic_conditions, dpa.assigned_date
         FROM patients p
         JOIN doctor_patient_assignments dpa ON p.id = dpa.patient_id
         WHERE dpa.doctor_id = %s AND dpa.status = 'active'
+        AND p.id NOT IN (
+            SELECT patient_id FROM prescriptions 
+            WHERE doctor_id = %s AND prescribed_date = CURDATE()
+        )
         ORDER BY dpa.assigned_date DESC
+    """, (current_user.id, current_user.id))
+    waiting_patients = cur.fetchall()
+    
+    # Patients prescribed today (completed)
+    cur.execute("""
+        SELECT p.id, p.full_name, p.age, p.gender, p.blood_group,
+               pr.drugs_json, pr.diagnosis, pr.prescribed_date
+        FROM prescriptions pr
+        JOIN patients p ON pr.patient_id = p.id
+        WHERE pr.doctor_id = %s AND pr.prescribed_date = CURDATE()
+        ORDER BY pr.prescribed_date DESC
     """, (current_user.id,))
-    patients = cur.fetchall()
+    completed_today = cur.fetchall()
     
     cur.close()
     conn.close()
     
-    return render_template('doctor/dashboard.html', patients=patients if patients else [])
+    return render_template('doctor/dashboard.html', 
+                         patients=waiting_patients,
+                         completed_today=completed_today)
 
 # =============================================
 # DOCTOR - PRESCRIPTION SAFETY CHECKER
@@ -1189,74 +1206,109 @@ def prescription_check():
     warnings = []
     patient = None
     
+    conn = get_db()
+    cur = conn.cursor()
+    
+    # Get assigned patients — exclude ones already prescribed today
+    cur.execute("""
+        SELECT p.id, p.full_name, p.age, p.gender, p.blood_group, p.allergies, p.chronic_conditions
+        FROM patients p
+        JOIN doctor_patient_assignments dpa ON p.id = dpa.patient_id
+        WHERE dpa.doctor_id = %s AND dpa.status = 'active'
+        AND p.id NOT IN (
+            SELECT patient_id FROM prescriptions 
+            WHERE doctor_id = %s AND prescribed_date = CURDATE()
+        )
+        ORDER BY p.full_name
+    """, (current_user.id, current_user.id))
+    assigned_patients = cur.fetchall()
+    
+    # Get today's completed prescriptions
+    cur.execute("""
+        SELECT p.id, p.full_name, pr.drugs_json, pr.diagnosis, pr.prescribed_date
+        FROM prescriptions pr
+        JOIN patients p ON pr.patient_id = p.id
+        WHERE pr.doctor_id = %s AND pr.prescribed_date = CURDATE()
+        ORDER BY pr.prescribed_date DESC
+    """, (current_user.id,))
+    completed_today = cur.fetchall()
+    
     if request.method == 'POST':
         patient_id = request.form.get('patient_id')
-        drug_name = request.form.get('drug_name')
-        dosage = request.form.get('dosage')
+        drug_name = request.form.get('drug_name', '')
+        dosage = request.form.get('dosage', '')
         
-        conn = get_db()
-        cur = conn.cursor()
+        # 🔴 OVERDOSE CHECK
+        if dosage:
+            nums = re.findall(r'[\d.]+', dosage)
+            if nums:
+                d = float(nums[0])
+                max_dosages = {
+                    'warfarin': 10, 'paracetamol': 4000, 'ibuprofen': 3200,
+                    'aspirin': 4000, 'metformin': 2550, 'diclofenac': 150,
+                }
+                drug_lower = drug_name.lower().strip()
+                if drug_lower in max_dosages and d > max_dosages[drug_lower]:
+                    warnings.append({
+                        'type': 'danger',
+                        'message': f'🚨 FATAL OVERDOSE: {d}mg exceeds max {max_dosages[drug_lower]}mg for {drug_name}!'
+                    })
+                if d > 10000:
+                    warnings.append({
+                        'type': 'danger',
+                        'message': f'🚨 EXTREME OVERDOSE: {d}mg is dangerously high!'
+                    })
         
-        # Get patient info
         cur.execute("SELECT * FROM patients WHERE id = %s", (patient_id,))
         patient = cur.fetchone()
         
         if patient:
-            # Check allergies
+            # Past prescriptions
+            cur.execute("""
+                SELECT drugs_json, diagnosis, prescribed_date 
+                FROM prescriptions WHERE patient_id = %s 
+                ORDER BY prescribed_date DESC LIMIT 5
+            """, (patient_id,))
+            past_prescriptions = cur.fetchall()
+            
+            # Allergy check
             if patient.get('allergies') and drug_name.lower() in patient['allergies'].lower():
                 warnings.append({
                     'type': 'danger',
                     'message': f'⚠️ ALLERGY ALERT: Patient is allergic to {drug_name}!'
                 })
             
-            # Check pregnancy
+            # Pregnancy check
             if drug_name.lower() in ['isotretinoin', 'thalidomide', 'warfarin', 'valproate']:
                 warnings.append({
                     'type': 'warning',
-                    'message': f'⚠️ PREGNANCY RISK: {drug_name} is contraindicated in pregnancy. Verify pregnancy status.'
+                    'message': f'⚠️ PREGNANCY RISK: {drug_name} is contraindicated in pregnancy.'
                 })
             
-            # Check kidney/liver
+            # Kidney/liver check
             if drug_name.lower() in ['ibuprofen', 'naproxen', 'diclofenac', 'gentamicin']:
                 warnings.append({
                     'type': 'warning',
-                    'message': f'⚠️ KIDNEY RISK: {drug_name} may affect kidney function. Check renal function tests.'
+                    'message': f'⚠️ KIDNEY RISK: {drug_name} may affect kidney function.'
                 })
             
-            if drug_name.lower() in ['paracetamol', 'acetaminophen'] and 'liver' in (patient.get('chronic_conditions') or '').lower():
-                warnings.append({
-                    'type': 'warning',
-                    'message': '⚠️ LIVER RISK: Patient has liver condition. Limit paracetamol to 2g/day.'
-                })
-            
-            # Check drug interactions from database
-            cur.execute("""
-                SELECT * FROM drug_interactions 
-                WHERE drug_a = %s OR drug_b = %s
-            """, (drug_name, drug_name))
-            interactions = cur.fetchall()
-            
-            for interaction in interactions:
+            # Drug interactions
+            cur.execute("SELECT * FROM drug_interactions WHERE drug_a = %s OR drug_b = %s", (drug_name, drug_name))
+            for interaction in cur.fetchall():
                 warnings.append({
                     'type': 'danger' if interaction['severity'] == 'high' else 'warning',
-                    'message': f'⚠️ DRUG INTERACTION: {interaction["drug_a"]} + {interaction["drug_b"]} — {interaction["description"]}'
+                    'message': f'⚠️ INTERACTION: {interaction["drug_a"]} + {interaction["drug_b"]} — {interaction["description"]}'
                 })
             
-            # Check duplicate medications
-            cur.execute("""
-                SELECT drugs_json FROM prescriptions 
-                WHERE patient_id = %s AND status = 'active'
-            """, (patient_id,))
-            active_prescriptions = cur.fetchall()
-            
-            for presc in active_prescriptions:
+            # Duplicate check
+            for presc in past_prescriptions:
                 if presc['drugs_json'] and drug_name.lower() in str(presc['drugs_json']).lower():
                     warnings.append({
                         'type': 'warning',
-                        'message': f'⚠️ DUPLICATE: Patient already has active prescription containing {drug_name}.'
+                        'message': f'⚠️ DUPLICATE: Already prescribed on {presc["prescribed_date"]}'
                     })
             
-            # 🤖 AI-POWERED PRESCRIPTION CHECK
+            # 🤖 AI check with full history
             try:
                 from app.er.groq_utils import check_prescription_with_ai
                 ai_result = check_prescription_with_ai(patient, drug_name, dosage)
@@ -1273,23 +1325,19 @@ def prescription_check():
                                 'type': 'info',
                                 'message': f"💡 Alternative: {alt}"
                             })
-                    if ai_result.get('monitoring_required'):
-                        for monitor in ai_result['monitoring_required']:
-                            warnings.append({
-                                'type': 'info',
-                                'message': f"📋 Monitoring: {monitor}"
-                            })
             except Exception as e:
-                print(f"AI prescription check skipped: {e}")
-        
-        cur.close()
-        conn.close()
+                print(f"AI check skipped: {e}")
         
         if not warnings:
-            flash('✅ No safety concerns detected. Prescription is safe.', 'success')
+            flash('✅ No safety concerns detected.', 'success')
+    
+    cur.close()
+    conn.close()
     
     return render_template('doctor/prescription_check.html', 
-                         warnings=warnings, patient=patient)
+                         warnings=warnings, patient=patient,
+                         assigned_patients=assigned_patients,
+                         completed_today=completed_today)
 
 
 @app.route('/doctor/save-prescription', methods=['POST'])
@@ -1307,7 +1355,6 @@ def save_prescription():
     duration = request.form.get('duration')
     diagnosis = request.form.get('diagnosis')
     
-    import json
     drugs_json = json.dumps([{
         'name': drug_name,
         'dosage': dosage,
@@ -1453,5 +1500,44 @@ def health_dept_dashboard():
                          total_facilities=total_facilities,
                          clusters=clusters,
                          ai_analysis=ai_analysis)
+
+@app.route('/doctor/add-timeline-event', methods=['POST'])
+@login_required
+@approved_required
+def add_timeline_event():
+    if current_user.role not in ['hospital_doctor', 'clinic_doctor']:
+        flash('Access denied.', 'danger')
+        return redirect(url_for('index'))
+    
+    patient_id = request.form.get('patient_id')
+    event_date = request.form.get('event_date')
+    event_type = request.form.get('event_type')
+    title = request.form.get('title')
+    description = request.form.get('description')
+    
+    report_file_path = None
+    if 'report_file' in request.files:
+        file = request.files['report_file']
+        if file.filename != '':
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"report_{timestamp}_{patient_id}.pdf"
+            file_path = os.path.join(app.static_folder, 'uploads', filename)
+            file.save(file_path)
+            report_file_path = filename
+    
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO disease_timeline 
+        (patient_id, event_date, event_type, title, description, report_file_path, doctor_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """, (patient_id, event_date, event_type, title, description, report_file_path, current_user.id))
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    flash('Timeline event added!', 'success')
+    return redirect(url_for('patient_timeline'))
+
 if __name__ == '__main__':
     app.run(debug=True)

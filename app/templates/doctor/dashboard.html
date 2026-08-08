@@ -39,6 +39,7 @@
         </div>
     </div>
 
+
     <!-- Quick Actions -->
     <div class="card">
         <h2>⚡ Quick Actions</h2>
@@ -118,6 +119,28 @@
             </tbody>
         </table>
         {% else %}
+        <!-- Completed Today -->
+{% if completed_today %}
+<div class="card">
+    <h2>✅ Completed Today</h2>
+    <table class="admin-table">
+        <thead>
+            <tr><th>Patient</th><th>Age/Gender</th><th>Medication</th><th>Diagnosis</th><th>Time</th></tr>
+        </thead>
+        <tbody>
+            {% for c in completed_today %}
+            <tr>
+                <td><strong>{{ c.full_name }}</strong></td>
+                <td>{{ c.age or '—' }} / {{ c.gender or '—' }}</td>
+                <td>{{ c.drugs_json }}</td>
+                <td>{{ c.diagnosis or '—' }}</td>
+                <td>{{ c.prescribed_date.strftime('%H:%M') if c.prescribed_date else '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
         <div class="empty-state">
             <span style="font-size:3rem;">👥</span>
             <h3>No Patients Assigned</h3>

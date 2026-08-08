@@ -130,39 +130,89 @@ def analyze_symptoms_hybrid(symptoms_text, patient_name=None, patient_age=None, 
     return rule_result
 
 def check_prescription_with_ai(patient, drug_name, dosage):
-    """Use Groq AI for comprehensive prescription safety check."""
+    """Use Groq AI for comprehensive prescription safety check with patient history."""
     if not os.getenv('GROQ_API_KEY'):
         return None
     
+    # Get patient's previous prescriptions from database
+    try:
+        import pymysql
+        conn = pymysql.connect(
+            host='localhost', user='root', password='', database='healthgrid',
+            cursorclass=pymysql.cursors.DictCursor
+        )
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT drugs_json, diagnosis, prescribed_date 
+            FROM prescriptions WHERE patient_id = %s 
+            ORDER BY prescribed_date DESC LIMIT 10
+        """, (patient['id'],))
+        past_meds = cur.fetchall()
+        
+        cur.execute("""
+            SELECT event_date, event_type, title, description 
+            FROM disease_timeline WHERE patient_id = %s 
+            ORDER BY event_date DESC LIMIT 20
+        """, (patient['id'],))
+        past_history = cur.fetchall()
+        cur.close()
+        conn.close()
+    except:
+        past_meds = []
+        past_history = []
+    
+    # Build comprehensive patient profile
     patient_info = f"""
-Patient: {patient.get('full_name', 'Unknown')}
+PATIENT PROFILE:
+Name: {patient.get('full_name', 'Unknown')}
 Age: {patient.get('age', 'N/A')}
 Gender: {patient.get('gender', 'N/A')}
-Allergies: {patient.get('allergies', 'None')}
-Chronic Conditions: {patient.get('chronic_conditions', 'None')}
 Blood Group: {patient.get('blood_group', 'N/A')}
+ALLERGIES: {patient.get('allergies', 'None reported')}
+CHRONIC CONDITIONS: {patient.get('chronic_conditions', 'None reported')}
 """
-    
-    prompt = f"""You are a clinical pharmacist AI. Check this prescription for safety issues.
 
-PATIENT:
+    # Add past medications
+    if past_meds:
+        patient_info += "\nPAST MEDICATIONS:\n"
+        for med in past_meds:
+            patient_info += f"- {med['prescribed_date']}: {med.get('drugs_json', 'Unknown')} (Diagnosis: {med.get('diagnosis', 'Unknown')})\n"
+    
+    # Add disease history
+    if past_history:
+        patient_info += "\nMEDICAL HISTORY:\n"
+        for event in past_history:
+            patient_info += f"- {event['event_date']}: [{event['event_type']}] {event['title']}"
+            if event.get('description'):
+                patient_info += f" — {event['description']}"
+            patient_info += "\n"
+    
+    prompt = f"""You are a clinical pharmacist AI. Review this prescription against the patient's complete medical history.
+
 {patient_info}
 
-PRESCRIPTION:
+NEW PRESCRIPTION:
 Drug: {drug_name}
 Dosage: {dosage}
 
-Check for: drug interactions, allergies, pregnancy risks, kidney/liver issues, duplicate therapy, age-appropriate dosing, contraindications.
+PERFORM THESE CHECKS:
+1. ALLERGY CHECK: Does patient have known allergy to this drug or similar drugs?
+2. DRUG INTERACTION: Does this drug interact with any past medications?
+3. DISEASE CONTRADICTION: Is this drug contraindicated with patient's chronic conditions?
+4. DOSAGE SAFETY: Is the dosage appropriate for patient's age and conditions?
+5. DUPLICATE THERAPY: Is patient already taking this or similar drug?
+6. ORGAN FUNCTION: Any kidney/liver concerns based on patient history?
 
 Return ONLY JSON:
 {{
-    "safe": true,
+    "safe": false,
     "warnings": [
-        {{"severity": "high", "message": "Warning message"}}
+        {{"severity": "high", "message": "Specific warning with reason"}}
     ],
-    "alternative_suggestions": ["Alternative drug 1"],
-    "monitoring_required": ["Monitor liver function", "Check renal panel"],
-    "confidence": 90
+    "alternative_suggestions": ["Safer alternative drug"],
+    "monitoring_required": ["What to monitor"],
+    "confidence": 90,
+    "summary": "Brief assessment summary"
 }}"""
 
     try:
@@ -170,19 +220,18 @@ Return ONLY JSON:
         response = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": "You are a pharmacist AI. Return only valid JSON."},
+                {"role": "system", "content": "You are a clinical pharmacist AI. Always return valid JSON only."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.1, max_tokens=400
+            temperature=0.2, max_tokens=600
         )
         result_text = response.choices[0].message.content.strip()
         if '```' in result_text:
             result_text = result_text.split('```')[1].split('```')[0].strip()
         return json.loads(result_text)
     except Exception as e:
-        print(f"Prescription AI check failed: {e}")
+        print(f"AI prescription check failed: {e}")
         return None
-
 
 def detect_outbreaks_with_ai(clusters):
     """Use Groq AI to analyze community health data and detect outbreaks."""
@@ -224,3 +273,60 @@ Return ONLY JSON:
     except Exception as e:
         print(f"Outbreak AI detection failed: {e}")
         return None
+    
+
+def predict_health_risks_with_ai(patient, timeline_data):
+    """Use Groq AI to predict future health risks from patient history."""
+    if not os.getenv('GROQ_API_KEY'):
+        return None
+    
+    # Build patient history summary
+    history_summary = f"Patient: {patient.get('full_name', 'Unknown')}, Age: {patient.get('age', 'N/A')}, Gender: {patient.get('gender', 'N/A')}\n"
+    history_summary += f"Blood Group: {patient.get('blood_group', 'N/A')}, Allergies: {patient.get('allergies', 'None')}\n"
+    history_summary += f"Chronic Conditions: {patient.get('chronic_conditions', 'None')}\n\n"
+    history_summary += "Medical History Timeline:\n"
+    
+    for event in timeline_data:
+        history_summary += f"- {event['event_date']}: [{event['event_type']}] {event['title']}\n"
+    
+    prompt = f"""You are a clinical AI assistant. Analyze this patient's medical history and predict future health risks.
+
+{history_summary}
+
+Return ONLY JSON:
+{{
+    "risks": [
+        {{
+            "condition": "Disease name",
+            "probability": "High/Medium/Low",
+            "timeframe": "Expected timeframe",
+            "recommendation": "Preventive action"
+        }}
+    ],
+    "overall_score": 45,
+    "risk_level": "Medium",
+    "summary": "Brief clinical summary"
+}}"""
+
+    try:
+        client = Groq(api_key=os.getenv('GROQ_API_KEY'))
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": "You are a clinical AI. Return only valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2, max_tokens=500
+        )
+        result_text = response.choices[0].message.content.strip()
+        if '```' in result_text:
+            result_text = result_text.split('```')[1].split('```')[0].strip()
+        return json.loads(result_text)
+    except Exception as e:
+        print(f"AI prediction failed: {e}")
+        return {
+            "risks": [],
+            "overall_score": 0,
+            "risk_level": "Unknown",
+            "summary": "AI analysis unavailable"
+        }

@@ -1,5 +1,7 @@
 {% extends "base.html" %}
-
+<div style="margin-bottom:15px;">
+    <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+</div>
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/prescription.css') }}">
 {% endblock %}
@@ -13,26 +15,35 @@
     </div>
     
     <!-- Search Form -->
-    <div class="card">
-        <h3>🔍 Check Prescription</h3>
-        <form method="POST" action="{{ url_for('prescription_check') }}">
-            <div class="form-row">
-                <div class="field">
-                    <label>Patient ID</label>
-                    <input class="input" type="number" name="patient_id" placeholder="Enter patient ID" required>
-                </div>
-                <div class="field">
-                    <label>Drug Name</label>
-                    <input class="input" type="text" name="drug_name" placeholder="e.g. Ibuprofen, Warfarin" required>
-                </div>
-                <div class="field">
-                    <label>Dosage</label>
-                    <input class="input" type="text" name="dosage" placeholder="e.g. 400mg twice daily">
-                </div>
+   <div class="card">
+    <h3>🔍 Check Prescription</h3>
+    <form method="POST" action="{{ url_for('prescription_check') }}">
+        <div class="form-row">
+            <div class="field">
+                <label>Select Patient</label>
+                <select class="input" name="patient_id" required>
+                    <option value="">Choose a patient...</option>
+                    {% for p in assigned_patients %}
+                        <option value="{{ p.id }}" {% if patient and patient.id == p.id %}selected{% endif %}>
+                            {{ p.full_name }} ({{ p.age }}y, {{ p.blood_group or '?' }}) — {{ p.chronic_conditions or 'No conditions' }}
+                        </option>
+                    {% endfor %}
+                </select>
             </div>
-            <button type="submit" class="btn btn-primary btn-lg">🔍 Check Safety</button>
-        </form>
-    </div>
+        </div>
+        <div class="form-row">
+            <div class="field">
+                <label>Drug Name</label>
+                <input class="input" type="text" name="drug_name" placeholder="e.g. Warfarin" required>
+            </div>
+            <div class="field">
+                <label>Dosage</label>
+                <input class="input" type="text" name="dosage" placeholder="e.g. 5mg once daily">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">🔍 Check Safety</button>
+    </form>
+</div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -76,7 +87,8 @@
     {% endif %}
 
     <!-- Save Prescription (only if safe) -->
-    {% if patient and not warnings %}
+    {% if patient %}
+
     <div class="card success-card">
         <div class="success-header">
             <span class="success-icon">✅</span>
@@ -86,6 +98,8 @@
             </div>
         </div>
         
+        
+
         <form method="POST" action="{{ url_for('save_prescription') }}" class="save-form">
             <input type="hidden" name="patient_id" value="{{ patient.id }}">
             <input type="hidden" name="drug_name" value="{{ request.form.get('drug_name', '') }}">
@@ -121,6 +135,24 @@
     </div>
     {% endif %}
 
+    <!-- Today's Completed -->
+{% if completed_today %}
+<div class="card">
+    <h3>✅ Completed Today</h3>
+    <table class="admin-table">
+        <thead><tr><th>Patient</th><th>Medication</th><th>Diagnosis</th></tr></thead>
+        <tbody>
+            {% for c in completed_today %}
+            <tr>
+                <td><strong>{{ c.full_name }}</strong></td>
+                <td>{{ c.drugs_json }}</td>
+                <td>{{ c.diagnosis or '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
     <!-- Quick Reference: Common Drug Interactions -->
     <div class="card reference-card">
         <h3>📚 Common Drug Interaction Reference</h3>

@@ -38,6 +38,27 @@
     </div>
     {% endif %}
 
+    {% if clusters %}
+<div class="card">
+    <h2>📍 Symptom Clusters (7 Days)</h2>
+    <table class="admin-table">
+        <thead><tr><th>Condition</th><th>City</th><th>Cases</th></tr></thead>
+        <tbody>
+            {% for c in clusters %}
+            <tr>
+                <td><strong>{{ c.predicted_condition or 'Unknown' }}</strong></td>
+                <td>{{ c.city }}, {{ c.state }}</td>
+                <td><span class="badge badge-red">{{ c.case_count }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <a href="{{ url_for('health_report') }}" class="btn btn-primary">🗺️ View Full Zone Watch Report</a>
+</div>
     <!-- Rest of dashboard content -->
 </div>
 {% endblock %}

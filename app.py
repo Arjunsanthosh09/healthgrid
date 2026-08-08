@@ -1432,7 +1432,6 @@ def health_report():
                          alerts=alerts,
                          city_stats=city_stats,
                          ai_analysis=ai_analysis)
-
 @app.route('/dashboard/health-dept')
 @login_required
 @approved_required
@@ -1454,15 +1453,13 @@ def health_dept_dashboard():
     cur.execute("SELECT COUNT(*) as facilities FROM facilities")
     total_facilities = cur.fetchone()['facilities']
     
-    # Get symptom clusters for AI analysis
+    # Get symptom clusters for AI
     cur.execute("""
-        SELECT et.predicted_condition, f.city, f.state, COUNT(*) as case_count,
-               MAX(et.created_at) as latest_case
+        SELECT et.predicted_condition, f.city, f.state, COUNT(*) as case_count
         FROM er_triage et 
         JOIN facilities f ON et.facility_id = f.id
         WHERE et.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
         GROUP BY et.predicted_condition, f.city, f.state 
-        HAVING case_count >= 1
         ORDER BY case_count DESC
     """)
     clusters = cur.fetchall()
@@ -1470,13 +1467,14 @@ def health_dept_dashboard():
     cur.close()
     conn.close()
     
-    # 🔥 AI OUTBREAK DETECTION
+    # AI outbreak detection
     ai_analysis = None
-    try:
-        from app.er.groq_utils import detect_outbreaks_with_ai
-        ai_analysis = detect_outbreaks_with_ai(clusters)
-    except Exception as e:
-        print(f"AI outbreak detection skipped: {e}")
+    if clusters:
+        try:
+            from app.er.groq_utils import detect_outbreaks_with_ai
+            ai_analysis = detect_outbreaks_with_ai(clusters)
+        except Exception as e:
+            print(f"AI analysis skipped: {e}")
     
     return render_template('health_dept/dashboard.html',
                          total_week=total_week,

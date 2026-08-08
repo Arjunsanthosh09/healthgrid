@@ -19,12 +19,21 @@ app = Flask(__name__,
 
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 
-# Database config
+# DB_CONFIG = {
+#     'host': 'localhost',
+#     'user': 'root',
+#     'password': '',
+#     'database': 'healthgrid',
+#     'cursorclass': pymysql.cursors.DictCursor
+# }
+
+import os
+
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',
-    'database': 'healthgrid',
+    'host': os.getenv('MYSQL_HOST', 'localhost'),
+    'user': os.getenv('MYSQL_USER', 'root'),
+    'password': os.getenv('MYSQL_PASSWORD', ''),
+    'database': os.getenv('MYSQL_DATABASE', 'healthgrid'),
     'cursorclass': pymysql.cursors.DictCursor
 }
 

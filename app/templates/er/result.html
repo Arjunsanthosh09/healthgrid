@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/triage_result.css') }}">
+{% endblock %}
+
+{% block title %}Triage Result — HealthGrid{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <a href="{{ url_for('triage') }}" class="back">← New Triage</a>
+    
+    <!-- Severity Header -->
+    <div class="result-header severity-{{ result.severity_color }}">
+        <h1>
+            {% if result.severity == 'red' %}🔴
+            {% elif result.severity == 'yellow' %}🟡
+            {% else %}🟢{% endif %}
+            {{ result.severity_label }}
+        </h1>
+        <p>AI Confidence: {{ result.confidence }}%</p>
+    </div>
+
+    <!-- AI Model Badge -->
+    <div class="ai-badge">
+        🤖 Analysis by: <strong>{{ result.ai_model }}</strong> | 
+        Type: <strong>{{ result.analysis_type }}</strong>
+    </div>
+
+    <!-- Patient Details & Detected Symptoms -->
+    <div class="result-grid">
+        <div class="card">
+            <h3>👤 Patient Details</h3>
+            <p><strong>Name:</strong> {{ patient_name }}</p>
+            <p><strong>Age:</strong> {{ patient_age }}</p>
+            <p><strong>Gender:</strong> {{ patient_gender }}</p>
+        </div>
+        
+        <div class="card">
+            <h3>🔍 Detected Symptoms</h3>
+            {% if result.detected_symptoms %}
+                <ul>
+                    {% for symptom in result.detected_symptoms %}
+                        <li>{{ symptom }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No specific symptoms detected.</p>
+            {% endif %}
+        </div>
+        
+        <div class="card">
+            <h3>🏥 Predicted Conditions</h3>
+            <ul>
+                {% for condition in result.predicted_conditions %}
+                    <li><strong>{{ condition }}</strong></li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="card">
+            <h3>🧪 Suggested Tests</h3>
+            {% if result.suggested_tests is string %}
+                <p>{{ result.suggested_tests }}</p>
+            {% else %}
+                <ul>
+                    {% for test in result.suggested_tests %}
+                        <li>{{ test }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Emergency Care Instructions -->
+    {% if result.emergency_care_steps %}
+    <div class="card emergency-care-card">
+        <h2>🚨 Emergency Care Instructions</h2>
+        <p class="care-note">Perform these steps while waiting for the doctor:</p>
+        
+        <div class="care-grid">
+            <div class="care-section">
+                <h3>📋 Step-by-Step Care</h3>
+                <ol class="care-steps">
+                    {% for step in result.emergency_care_steps %}
+                        <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            
+            <div class="care-section">
+                <h3>🩺 Vital Signs to Monitor</h3>
+                <ul>
+                    {% for vital in result.vital_signs_to_monitor %}
+                        <li>{{ vital }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            {% if result.red_flags %}
+            <div class="care-section">
+                <h3>🚩 Red Flags — Alert Doctor Immediately</h3>
+                <ul>
+                    {% for flag in result.red_flags %}
+                        <li class="red-flag-item">{{ flag }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            {% if result.medications_to_prepare %}
+            <div class="care-section">
+                <h3>💊 Medications to Prepare</h3>
+                <ul>
+                    {% for med in result.medications_to_prepare %}
+                        <li>{{ med }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            {% if result.equipment_needed %}
+            <div class="care-section">
+                <h3>🏥 Equipment Needed</h3>
+                <ul>
+                    {% for equip in result.equipment_needed %}
+                        <li>{{ equip }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Differential Diagnosis -->
+    {% if result.differential_diagnosis %}
+    <div class="card">
+        <h3>🔬 Differential Diagnosis</h3>
+        <ul>
+            {% for d in result.differential_diagnosis %}
+                <li>{{ d }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Immediate Actions -->
+    {% if result.immediate_actions %}
+    <div class="card">
+        <h3>⚡ Immediate Actions Required</h3>
+        <ul>
+            {% for action in result.immediate_actions %}
+                <li><strong>{{ action }}</strong></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Follow-up Questions -->
+    {% if result.follow_up_questions %}
+    <div class="card">
+        <h3>❓ Follow-up Questions</h3>
+        <ul>
+            {% for question in result.follow_up_questions %}
+                <li>{{ question }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Critical Alert -->
+    {% if result.severity == 'red' %}
+    <div class="alert alert-danger" style="margin-top:20px;">
+        <strong>🚨 CRITICAL ALERT SENT!</strong> On-duty doctors and health department have been notified.
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="result-actions">
+        <a href="{{ url_for('triage') }}" class="btn btn-primary">🎤 New Triage</a>
+        <button onclick="window.print()" class="btn btn-secondary">🖨️ Print Report</button>
+    </div>
+</div>
+{% endblock %}

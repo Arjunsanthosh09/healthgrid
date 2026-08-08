@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register as Health Officer — HealthGrid</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="auth-shell">
+  <aside class="auth-side">
+    <a href="{{ url_for('index') }}" class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 30 30" width="30" height="30"><rect x="1" y="1" width="28" height="28" rx="8" fill="#ffffff"/><path d="M6 15 H11 L13 9 L17 21 L19 15 H24" fill="none" stroke="#0b5e40" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      HealthGrid
+    </a>
+    <div class="auth-copy">
+      <span class="eyebrow">Health department</span>
+      <h2>Monitor your community's health in real time.</h2>
+      <p>Get outbreak alerts, triage heat maps, and prescription error surveillance — all on one dashboard.</p>
+      <div class="auth-stats">
+        <div><b>24/7</b><span>outbreak monitoring</span></div>
+        <div><b>Real-time</b><span>prescription alerts</span></div>
+      </div>
+    </div>
+    <div></div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card" style="max-width:480px;">
+      <a href="{{ url_for('register') }}" class="back">← Choose a different account type</a>
+      <span class="form-badge">🏛️ Health officer account</span>
+      <h1>Register as health department officer</h1>
+      <p class="lede">Your registration will be verified before dashboard access is granted.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('register_user') }}" novalidate>
+        <!-- Hidden role field -->
+        <input type="hidden" name="role" value="health_officer">
+
+        <div class="field">
+          <label for="us-name">Full name</label>
+          <input class="input" type="text" id="us-name" name="full_name" placeholder="Dr. Rajesh Kumar" required>
+        </div>
+
+        <div class="field">
+          <label for="us-license">Government ID / License no.</label>
+          <input class="input" type="text" id="us-license" name="license_no" placeholder="e.g. GMC-000000" required>
+        </div>
+
+        <div class="field">
+          <label for="us-dept">Department / Region</label>
+          <input class="input" type="text" id="us-dept" name="facility_name" placeholder="e.g. District Health Office, Jaipur">
+        </div>
+
+        <div class="field">
+          <label for="us-email">Work email</label>
+          <input class="input" type="email" id="us-email" name="email" placeholder="you@healthdept.gov.in" required>
+        </div>
+
+        <div class="field">
+          <label for="us-phone">Contact phone</label>
+          <input class="input" type="tel" id="us-phone" name="phone" placeholder="+91 00000 00000" required>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="us-pw">Create password</label>
+            <input class="input" type="password" id="us-pw" name="password" placeholder="••••••••" required>
+          </div>
+          <div class="field">
+            <label for="us-pw2">Confirm password</label>
+            <input class="input" type="password" id="us-pw2" name="confirm_password" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <div class="check-row">
+          <input type="checkbox" id="us-terms" name="agreement" value="yes" required>
+          <label for="us-terms">I confirm my government ID is accurate and agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Submit for verification</button>
+      </form>
+
+      <div class="switch-line">Already registered? <a href="{{ url_for('login') }}">Log in</a></div>
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthGrid — One safety net for ER, doctors, and public health</title>
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="living-grid" aria-hidden="true"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="wrap">
+    <a href="index.html" class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 30 30" width="30" height="30">
+          <rect x="1" y="1" width="28" height="28" rx="8" fill="#0b5e40"/>
+          <path d="M6 15 H11 L13 9 L17 21 L19 15 H24" fill="none" stroke="#34c77b" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      HealthGrid
+    </a>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#trust">Trust &amp; privacy</a>
+    </div>
+    <div class="nav-cta">
+<!-- With query parameters -->
+<a href="{{ url_for('login', next=request.path) }}" class="btn btn-ghost">Log in</a>
+
+<!-- With user type parameter -->
+<a href="{{ url_for('register', type='patient') }}" class="btn btn-primary">Register</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Voice AI · Predictive analytics · Public health</span>
+      <h1>The minute a patient<br>waits is the minute<br><em>HealthGrid</em> is built to save.</h1>
+      <p class="hero-sub">HealthGrid connects ER teams, doctors, and health departments into one intelligent safety net — triaging patients by voice, catching prescription errors before they happen, and spotting outbreaks while there's still time to act.</p>
+      <div class="hero-actions">
+        <a href="register.html" class="btn btn-primary btn-lg">Request a demo</a>
+        <a href="#how-it-works" class="btn btn-ghost btn-lg">See how it works</a>
+      </div>
+      <div class="hero-note">ENCRYPTED &amp; FEDERATED · OFFLINE-CAPABLE · BUILT WITH ER &amp; PUBLIC HEALTH TEAMS</div>
+    </div>
+
+    <div class="grid-viz" aria-hidden="true">
+      <svg viewBox="0 0 400 400">
+        <path class="gv-line" d="M80,90 C160,90 200,150 200,200"/>
+        <path class="gv-line" d="M320,90 C240,90 200,150 200,200"/>
+        <path class="gv-line" d="M200,200 C200,260 160,300 100,320"/>
+        <path class="gv-line" d="M200,200 C200,260 240,300 300,320"/>
+        <path class="gv-pulse p1" d="M80,90 C160,90 200,150 200,200"/>
+        <path class="gv-pulse p2" d="M320,90 C240,90 200,150 200,200"/>
+        <path class="gv-pulse p3" d="M200,200 C200,260 160,300 100,320"/>
+
+        <circle class="gv-node-ring" cx="200" cy="200" r="30"/>
+        <circle class="gv-node-ring r2" cx="80" cy="90" r="22"/>
+        <circle class="gv-node-ring r3" cx="320" cy="90" r="22"/>
+
+        <circle class="gv-node" cx="200" cy="200" r="30"/>
+        <circle class="gv-node-dot" cx="200" cy="200" r="6"/>
+        <text class="gv-label" x="200" y="248" text-anchor="middle">HealthGrid</text>
+
+        <circle class="gv-node" cx="80" cy="90" r="22"/>
+        <circle class="gv-node-dot" cx="80" cy="90" r="5"/>
+        <text class="gv-label" x="80" y="65" text-anchor="middle">ER</text>
+
+        <circle class="gv-node" cx="320" cy="90" r="22"/>
+        <circle class="gv-node-dot" cx="320" cy="90" r="5"/>
+        <text class="gv-label" x="320" y="65" text-anchor="middle">Doctor</text>
+
+        <circle class="gv-node" cx="100" cy="320" r="22"/>
+        <circle class="gv-node-dot" cx="100" cy="320" r="5"/>
+        <text class="gv-label" x="100" y="352" text-anchor="middle">Health dept</text>
+
+        <circle class="gv-node" cx="300" cy="320" r="22"/>
+        <circle class="gv-node-dot" cx="300" cy="320" r="5"/>
+        <text class="gv-label" x="300" y="352" text-anchor="middle">Community</text>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<!-- PROBLEM -->
+<section>
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">The problem</span>
+      <h2>Data sits in silos. People pay for it.</h2>
+    </div>
+    <div class="problem-list">
+      <div class="problem-card" data-reveal>
+        <span class="tag">ER</span>
+        <p>Every minute, a critical patient waits while paperwork piles up and triage stays slow and inconsistent.</p>
+      </div>
+      <div class="problem-card" data-reveal data-delay="90">
+        <span class="tag">Clinics</span>
+        <p>Medication errors happen silently, one prescription at a time, because no one sees the full patient timeline.</p>
+      </div>
+      <div class="problem-card" data-reveal data-delay="180">
+        <span class="tag">Public health</span>
+        <p>Outbreaks are caught days too late, because ERs, clinics, and health departments don't share what they know.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="section-alt">
+  <div class="wrap">
+    <div class="section-head center" data-reveal>
+      <span class="eyebrow">How it works</span>
+      <h2>One platform. Three roles, working from the same grid.</h2>
+    </div>
+    <div class="role-grid">
+      <div class="role-card" data-reveal>
+        <div class="role-icon">🎤</div>
+        <h3>For ER teams</h3>
+        <p>Speak a patient's symptoms and HealthGrid transcribes, extracts the medical terms, and returns a Red / Yellow / Green severity score with suggested tests in seconds — so critical cases never sit in a queue.</p>
+        <a href="register-hospital.html" class="btn-text">Register a hospital</a>
+      </div>
+      <div class="role-card" data-reveal data-delay="90">
+        <div class="role-icon">📊</div>
+        <h3>For doctors</h3>
+        <p>See every blood test, scan, and prescription on one visual timeline. HealthGrid checks new prescriptions for interactions, allergies, and dosage risk before they ever reach the patient.</p>
+        <a href="register-clinic.html" class="btn-text">Register a clinic</a>
+      </div>
+      <div class="role-card" data-reveal data-delay="180">
+        <div class="role-icon">🗺️</div>
+        <h3>For health officers</h3>
+        <p>Watch a live heat map of triage activity across every connected facility, get alerted the moment a symptom cluster looks like an outbreak, and spot clinics with repeated prescribing errors.</p>
+        <a href="register-user.html" class="btn-text">Register as a user</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="wrap">
+    <div class="section-head center" data-reveal>
+      <span class="eyebrow">What powers the platform</span>
+      <h2>Six systems, one shared grid</h2>
+    </div>
+    <div class="feature-grid" data-reveal>
+      <div class="feature-item">
+        <span class="fi-icon">🎤</span>
+        <h4>Voice symptom triage</h4>
+        <p>Symptoms spoken aloud become structured, searchable clinical data in real time.</p>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">⏱️</span>
+        <h4>AI severity scoring</h4>
+        <p>Every case is scored Red, Yellow, or Green the moment it's logged — no waiting on a chart review.</p>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">📈</span>
+        <h4>Disease timeline</h4>
+        <p>Years of reports and prescriptions become one visual history, with risk predicted ahead of time.</p>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">💊</span>
+        <h4>Prescription error checker</h4>
+        <p>Interactions, allergies, pregnancy risk, and organ-adjusted dosing are checked before you prescribe.</p>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">🗺️</span>
+        <h4>Outbreak heat maps</h4>
+        <p>Symptom clusters across facilities surface automatically, days before they'd otherwise be noticed.</p>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">🔔</span>
+        <h4>Real-time alerts</h4>
+        <p>A Red-severity case notifies the on-duty doctor and the health department at the same instant.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section id="trust" class="section-alt">
+  <div class="wrap">
+    <div class="section-head" data-reveal>
+      <span class="eyebrow">Trust &amp; privacy</span>
+      <h2>Built to be trusted with a chart, not just a login.</h2>
+    </div>
+    <div class="trust-grid">
+      <div class="trust-card" data-reveal>
+        <b>Privacy-first</b>
+        All patient data stays encrypted and federated — no facility sees more than its own patients unless a clinician shares access.
+      </div>
+      <div class="trust-card" data-reveal data-delay="90">
+        <b>Works offline</b>
+        Built for low-connectivity areas. Once loaded, triage and timelines keep working without a live connection.
+      </div>
+      <div class="trust-card" data-reveal data-delay="180">
+        <b>Clinically grounded</b>
+        Designed with input from ER physicians and public health experts, not built in a vacuum.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section>
+  <div class="wrap">
+    <div class="cta-band" data-reveal>
+      <div>
+        <h2>See HealthGrid on your own data.</h2>
+        <p>A 30-minute walkthrough with your triage, timeline, and outbreak scenarios.</p>
+      </div>
+      <div class="cta-actions">
+        <a href="register.html" class="btn btn-primary btn-lg">Request a demo</a>
+        <a href="login.html" class="btn btn-ghost btn-lg" style="border-color:rgba(255,255,255,.4); color:#fff;">Log in</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <div class="foot-brand">
+      <svg viewBox="0 0 30 30" width="22" height="22"><rect x="1" y="1" width="28" height="28" rx="8" fill="#0b5e40"/><path d="M6 15 H11 L13 9 L17 21 L19 15 H24" fill="none" stroke="#34c77b" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      HealthGrid
+    </div>
+    <div class="foot-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#trust">Trust</a>
+      <a href="login.html">Log in</a>
+      <a href="register.html">Register</a>
+    </div>
+  </div>
+  <div class="wrap foot-fine" style="margin-top:22px;">© 2026 HealthGrid. A unified safety net for ER, clinics, and public health.</div>
+</footer>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

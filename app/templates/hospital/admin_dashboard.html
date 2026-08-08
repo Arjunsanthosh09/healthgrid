@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if facility %}
+        Hospital Management — {{ facility.name }}
+    {% else %}
+        Hospital Management — HealthGrid
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    {% if not facility %}
+    <div class="card" style="text-align:center; padding:3rem;">
+        <span style="font-size:4rem;">⚠️</span>
+        <h2>No Hospital Linked</h2>
+        <p>Your account is not linked to any hospital facility yet.</p>
+        <p><strong>Contact Super Admin:</strong> admin@healthgrid.com</p>
+    </div>
+
+    {% else %}
+
+    <div class="dashboard-header">
+        <div>
+            <h1>🏨 {{ facility.name }}</h1>
+            <p>{{ facility.city }}, {{ facility.state }} | {{ facility.phone }}</p>
+        </div>
+        <span class="badge badge-success">Hospital Admin</span>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <h3>{{ er_departments|length }}</h3><span>ER Departments</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ doctors|selectattr('role', 'equalto', 'er_doctor')|list|length }}</h3><span>ER Doctors</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ doctors|selectattr('role', 'equalto', 'hospital_doctor')|list|length }}</h3><span>Hospital Doctors</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ doctors|length }}</h3><span>Total Staff</span>
+        </div>
+    </div>
+
+    <!-- Register Patient -->
+    <div class="card">
+        <h2>👤 Register New Patient</h2>
+        <form method="POST" action="{{ url_for('hospital_add_patient') }}" class="add-form">
+            <div class="form-row">
+                <div class="field"><label>Full Name</label><input class="input" type="text" name="full_name" placeholder="Rajesh Kumar" required></div>
+                <div class="field"><label>Email</label><input class="input" type="email" name="email" placeholder="patient@email.com" required></div>
+                <div class="field"><label>Phone</label><input class="input" type="tel" name="phone" placeholder="+91 00000 00000" required></div>
+            </div>
+            <div class="form-row">
+                <div class="field"><label>Age</label><input class="input" type="number" name="age" min="0" max="150"></div>
+                <div class="field"><label>Gender</label><select class="input" name="gender"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+                <div class="field"><label>Blood Group</label><select class="input" name="blood_group"><option value="">Unknown</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+            </div>
+            <div class="form-row">
+                <div class="field"><label>Allergies</label><input class="input" type="text" name="allergies" placeholder="e.g. Penicillin, Peanuts"></div>
+                <div class="field"><label>Chronic Conditions</label><input class="input" type="text" name="chronic_conditions" placeholder="e.g. Diabetes, Hypertension"></div>
+            </div>
+            <div class="form-row">
+                <div class="field"><label>Emergency Contact</label><input class="input" type="text" name="emergency_contact_name" placeholder="Contact name"></div>
+                <div class="field"><label>Emergency Phone</label><input class="input" type="tel" name="emergency_contact_phone" placeholder="+91 00000 00000"></div>
+            </div>
+            <div class="form-row">
+                <div class="field"><label>Assign Doctor</label><select class="input" name="assigned_doctor_id"><option value="">Assign later</option>{% for doctor in doctors %}<option value="{{ doctor.id }}">{{ doctor.full_name }}</option>{% endfor %}</select></div>
+                <div class="field"><label>Password</label><input class="input" type="text" name="password" value="Patient@123" required><small>Share with patient</small></div>
+            </div>
+            <button type="submit" class="btn btn-primary">Register Patient</button>
+        </form>
+    </div>
+
+    <!-- Register ER Department -->
+    <div class="card">
+        <h2>🏥 Register ER Department</h2>
+        <form method="POST" action="{{ url_for('hospital_add_er_department') }}" class="add-form">
+            <div class="form-row">
+                <div class="field"><label>Department Name</label><input class="input" type="text" name="name" placeholder="e.g. Main Emergency Room" required></div>
+                <div class="field"><label>ER Login Email</label><input class="input" type="email" name="email" placeholder="er@hospital.com" required></div>
+            </div>
+            <div class="form-row">
+                <div class="field"><label>Bed Capacity</label><input class="input" type="number" name="bed_capacity" min="1" placeholder="e.g. 25" required></div>
+                <div class="field"><label>Contact Phone</label><input class="input" type="tel" name="contact_phone" placeholder="+91 00000 00000"></div>
+            </div>
+            <div class="form-row">
+                <div class="field"><label>Login Password</label><input class="input" type="text" name="password" value="ER@123" required><small>Share with ER staff</small></div>
+            </div>
+            <button type="submit" class="btn btn-primary">Register ER Department</button>
+        </form>
+    </div>
+
+    <!-- ER Departments List -->
+    {% if er_departments %}
+    <div class="card">
+        <h2>📋 Registered ER Departments</h2>
+        <table class="admin-table">
+            <thead><tr><th>Department</th><th>Login Email</th><th>Beds</th><th>Contact</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for er in er_departments %}
+                <tr>
+                    <td><strong>{{ er.name }}</strong></td>
+                    <td>{{ er.email or '—' }}</td>
+                    <td>{{ er.bed_capacity }}</td>
+                    <td>{{ er.contact_phone or '—' }}</td>
+                    <td><span class="badge badge-{{ 'success' if er.is_active else 'danger' }}">{{ 'Active' if er.is_active else 'Inactive' }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Add Doctor -->
+    <div class="card">
+        <h2>➕ Add New Doctor</h2>
+        <form method="POST" action="{{ url_for('hospital_add_doctor') }}" class="add-form">
+            <div class="form-row">
+                <div class="field"><label>Full Name</label><input class="input" type="text" name="full_name" placeholder="Dr. Suresh Kumar" required></div>
+                <div class="field"><label>Email</label><input class="input" type="email" name="email" placeholder="doctor@hospital.com" required></div>
+                <div class="field"><label>Phone</label><input class="input" type="tel" name="phone" placeholder="+91 00000 00000" required></div>
+            </div>
+            <div class="form-row">
+                <div class="field"><label>Role</label><select class="input" name="role" required onchange="toggleERDepartment(this.value)"><option value="">Select role</option><option value="er_doctor">ER Doctor</option><option value="hospital_doctor">Hospital Doctor</option></select></div>
+                <div class="field" id="er-dept-field" style="display:none;"><label>Assign ER Dept</label><select class="input" name="er_department_id"><option value="">Select</option>{% for er in er_departments %}{% if er.is_active %}<option value="{{ er.id }}">{{ er.name }}</option>{% endif %}{% endfor %}</select></div>
+                <div class="field"><label>Specialty</label><input class="input" type="text" name="specialty" placeholder="e.g. Cardiology"></div>
+            </div>
+            <div class="form-row">
+                <div class="field"><label>Password</label><input class="input" type="text" name="password" value="Health@123" required><small>Doctor should change after login</small></div>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Doctor</button>
+        </form>
+    </div>
+
+    <!-- Doctors List -->
+    <div class="card">
+        <h2>👨‍⚕️ Hospital Staff</h2>
+        {% if doctors %}
+        <table class="admin-table">
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>ER Dept</th><th>Phone</th><th>Added</th><th>Action</th></tr></thead>
+            <tbody>
+                {% for doctor in doctors %}
+                <tr>
+                    <td><strong>{{ doctor.full_name }}</strong></td>
+                    <td>{{ doctor.email }}</td>
+                    <td><span class="badge badge-{{ 'red' if doctor.role == 'er_doctor' else 'blue' }}">{{ 'ER Doctor' if doctor.role == 'er_doctor' else 'Hospital Doctor' }}</span></td>
+                    <td>{{ doctor.er_dept_name or '—' }}</td>
+                    <td>{{ doctor.phone or '—' }}</td>
+                    <td>{{ doctor.created_at.strftime('%d-%m-%Y') if doctor.created_at else '—' }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('hospital_remove_doctor', doctor_id=doctor.id) }}" onsubmit="return confirm('Remove this doctor?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No doctors added yet.</p>
+        {% endif %}
+    </div>
+
+    {% endif %}
+</div>
+
+<style>
+.dashboard-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.dashboard-header h1 { margin: 0; color: #0b5e40; }
+.stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
+.stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; text-align: center; }
+.stat-card h3 { font-size: 2rem; color: #0b5e40; margin: 0; }
+.card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+.card h2 { margin-top: 0; color: #0b5e40; }
+.form-row { display: flex; gap: 15px; margin-bottom: 10px; }
+.field { flex: 1; margin-bottom: 10px; }
+.field label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9rem; }
+.field small { color: #888; font-size: 0.8rem; }
+.input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; }
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th { background: #0b5e40; color: white; padding: 10px; text-align: left; font-size: 0.85rem; }
+.admin-table td { padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+.badge-success { background: #d4edda; color: #155724; }
+.badge-danger { background: #f8d7da; color: #721c24; }
+.badge-red { background: #f8d7da; color: #721c24; }
+.badge-blue { background: #cce5ff; color: #004085; }
+.btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+.btn-primary { background: #0b5e40; color: white; }
+.btn-danger { background: #dc3545; color: white; }
+.btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+.alert { padding: 12px; border-radius: 4px; margin-bottom: 15px; }
+.alert-success { background: #d4edda; color: #155724; }
+.alert-danger { background: #f8d7da; color: #721c24; }
+.alert-warning { background: #fff3cd; color: #856404; }
+.text-muted { color: #888; }
+</style>
+
+<script>
+function toggleERDepartment(role) {
+    document.getElementById('er-dept-field').style.display = role === 'er_doctor' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

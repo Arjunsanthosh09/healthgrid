@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Pending Approval{% endblock %}
+
+{% block content %}
+<div class="pending-container">
+    <div class="pending-card">
+        <span class="pending-icon">⏳</span>
+        <h2>Registration Pending Approval</h2>
+        <p>Your registration has been submitted and is awaiting admin approval.</p>
+        <p>You will be able to login once an administrator reviews and approves your request.</p>
+        <p>This usually takes 24-48 hours.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

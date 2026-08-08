@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/erdash.css') }}">
+{% endblock %}
+
+{% block title %}ER Dashboard — HealthGrid{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>🏥 Emergency Room Dashboard</h1>
+            <p>Voice Triage & Patient Queue Management</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('triage') }}" class="btn btn-primary btn-lg">🎤 New Voice Triage</a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Stats Overview -->
+    <div class="stats-bar">
+        <div class="stat-card stat-red">
+            <h3>{{ triage_list|selectattr('severity', 'equalto', 'red')|list|length }}</h3>
+            <span>🔴 Critical</span>
+        </div>
+        <div class="stat-card stat-yellow">
+            <h3>{{ triage_list|selectattr('severity', 'equalto', 'yellow')|list|length }}</h3>
+            <span>🟡 Urgent</span>
+        </div>
+        <div class="stat-card stat-green">
+            <h3>{{ triage_list|selectattr('severity', 'equalto', 'green')|list|length }}</h3>
+            <span>🟢 Stable</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ triage_list|length }}</h3>
+            <span>Total Today</span>
+        </div>
+    </div>
+
+    <!-- Today's Triage Queue -->
+    <div class="card">
+        <h2>📋 Today's Patient Queue</h2>
+        {% if triage_list %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Patient</th>
+                    <th>Symptoms</th>
+                    <th>Severity</th>
+                    <th>Predicted Conditions</th>
+                    <th>Tests</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for triage in triage_list %}
+                <tr class="severity-row-{{ triage.severity }}">
+                    <td>{{ triage.created_at.strftime('%H:%M') if triage.created_at else '--:--' }}</td>
+                    <td><strong>{{ triage.patient_name or 'Unknown' }}</strong></td>
+                    <td>{{ triage.symptoms_text[:50] + '...' if triage.symptoms_text and triage.symptoms_text|length > 50 else triage.symptoms_text or '—' }}</td>
+                    <td>
+                        {% if triage.severity == 'red' %}
+                            <span class="badge badge-red">🔴 Critical</span>
+                        {% elif triage.severity == 'yellow' %}
+                            <span class="badge badge-yellow">🟡 Urgent</span>
+                        {% else %}
+                            <span class="badge badge-green">🟢 Stable</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ triage.predicted_condition or '—' }}</td>
+                    <td>{{ triage.suggested_tests[:50] + '...' if triage.suggested_tests and triage.suggested_tests|length > 50 else triage.suggested_tests or '—' }}</td>
+                    <td>
+                        <span class="badge badge-blue">Waiting</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <span style="font-size:3rem;">🏥</span>
+            <h3>No patients yet today</h3>
+            <p>Start a new voice triage to add patients to the queue.</p>
+            <a href="{{ url_for('triage') }}" class="btn btn-primary">Start Triage</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <h2>⚡ Quick Actions</h2>
+        <div class="quick-actions">
+            <a href="{{ url_for('triage') }}" class="action-card">
+                <span class="action-icon">🎤</span>
+                <h4>Voice Triage</h4>
+                <p>Record patient symptoms</p>
+            </a>
+            <div class="action-card">
+                <span class="action-icon">🔍</span>
+                <h4>Search Patient</h4>
+                <p>Find patient history</p>
+            </div>
+            <div class="action-card">
+                <span class="action-icon">📊</span>
+                <h4>Daily Report</h4>
+                <p>View today's statistics</p>
+            </div>
+            <div class="action-card">
+                <span class="action-icon">🚨</span>
+                <h4>Critical Alerts</h4>
+                <p>View active alerts</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

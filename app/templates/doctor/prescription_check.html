@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/prescription.css') }}">
+{% endblock %}
+
+{% block title %}Prescription Safety Checker — HealthGrid{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>💊 Prescription Safety Checker</h1>
+        <p>AI-powered drug safety verification — checks interactions, allergies, pregnancy risks, and organ function</p>
+    </div>
+    
+    <!-- Search Form -->
+    <div class="card">
+        <h3>🔍 Check Prescription</h3>
+        <form method="POST" action="{{ url_for('prescription_check') }}">
+            <div class="form-row">
+                <div class="field">
+                    <label>Patient ID</label>
+                    <input class="input" type="number" name="patient_id" placeholder="Enter patient ID" required>
+                </div>
+                <div class="field">
+                    <label>Drug Name</label>
+                    <input class="input" type="text" name="drug_name" placeholder="e.g. Ibuprofen, Warfarin" required>
+                </div>
+                <div class="field">
+                    <label>Dosage</label>
+                    <input class="input" type="text" name="dosage" placeholder="e.g. 400mg twice daily">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">🔍 Check Safety</button>
+        </form>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Patient Info (if found) -->
+    {% if patient %}
+    <div class="card patient-card">
+        <h3>👤 Patient: {{ patient.full_name }}</h3>
+        <div class="patient-details">
+            <span><strong>Age:</strong> {{ patient.age or 'N/A' }}</span>
+            <span><strong>Gender:</strong> {{ patient.gender or 'N/A' }}</span>
+            <span><strong>Blood Group:</strong> {{ patient.blood_group or 'N/A' }}</span>
+            <span><strong>Allergies:</strong> <span class="allergy-highlight">{{ patient.allergies or 'None' }}</span></span>
+            <span><strong>Chronic Conditions:</strong> {{ patient.chronic_conditions or 'None' }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Safety Warnings -->
+    {% if warnings %}
+    <div class="card warnings-card">
+        <h3>⚠️ Safety Warnings ({{ warnings|length }})</h3>
+        <div class="warnings-list">
+            {% for w in warnings %}
+            <div class="warning-item warning-{{ w.type }}">
+                <span class="warning-icon">
+                    {% if w.type == 'danger' %}🚨
+                    {% elif w.type == 'warning' %}⚠️
+                    {% else %}ℹ️{% endif %}
+                </span>
+                <span class="warning-text">{{ w.message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Save Prescription (only if safe) -->
+    {% if patient and not warnings %}
+    <div class="card success-card">
+        <div class="success-header">
+            <span class="success-icon">✅</span>
+            <div>
+                <h3>Prescription is Safe!</h3>
+                <p>No safety concerns detected. Save to patient records.</p>
+            </div>
+        </div>
+        
+        <form method="POST" action="{{ url_for('save_prescription') }}" class="save-form">
+            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+            <input type="hidden" name="drug_name" value="{{ request.form.get('drug_name', '') }}">
+            <input type="hidden" name="dosage" value="{{ request.form.get('dosage', '') }}">
+            
+            <h4>📝 Prescription Details</h4>
+            <div class="form-row">
+                <div class="field">
+                    <label>Drug</label>
+                    <input class="input" value="{{ request.form.get('drug_name', '') }}" disabled>
+                </div>
+                <div class="field">
+                    <label>Dosage</label>
+                    <input class="input" value="{{ request.form.get('dosage', '') }}" disabled>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>Frequency</label>
+                    <input class="input" name="frequency" placeholder="e.g. Twice daily after meals" required>
+                </div>
+                <div class="field">
+                    <label>Duration</label>
+                    <input class="input" name="duration" placeholder="e.g. 5 days" required>
+                </div>
+            </div>
+            <div class="field">
+                <label>Diagnosis / Reason</label>
+                <input class="input" name="diagnosis" placeholder="e.g. Acute musculoskeletal pain" required>
+            </div>
+            <button type="submit" class="btn btn-success btn-lg">💾 Save Prescription to Records</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Quick Reference: Common Drug Interactions -->
+    <div class="card reference-card">
+        <h3>📚 Common Drug Interaction Reference</h3>
+        <div class="reference-grid">
+            <div class="ref-item"><strong>Warfarin + Aspirin</strong> → Bleeding risk</div>
+            <div class="ref-item"><strong>Ibuprofen + Lisinopril</strong> → Reduced BP control</div>
+            <div class="ref-item"><strong>Metformin + Contrast</strong> → Lactic acidosis</div>
+            <div class="ref-item"><strong>Paracetamol + Alcohol</strong> → Liver damage</div>
+            <div class="ref-item"><strong>ACE inhibitors + Potassium</strong> → Hyperkalemia</div>
+            <div class="ref-item"><strong>Ciprofloxacin + Theophylline</strong> → Theophylline toxicity</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

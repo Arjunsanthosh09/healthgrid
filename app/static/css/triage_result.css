@@ -1,0 +1,234 @@
+/* ==========================================================================
+   HealthGrid — Triage Result
+   Same tokens as the other dashboard stylesheets. This is the payoff
+   screen right after voice triage — severity still needs to read
+   instantly (same literal red/amber/green as the ER queue), but the
+   surrounding content is dense reference material, so those sections
+   stay calm and card-based rather than competing for urgency.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --white:        #ffffff;
+  --mint-50:      #f2faf6;
+  --mint-100:     #e6f5ec;
+  --line:         #dbe9e1;
+  --line-strong:  #bcdccb;
+
+  --ink:          #0e2621;
+  --ink-muted:    #4d6058;
+  --ink-faint:    #86988f;
+
+  --green-900:    #0a4d36;
+  --green-800:    #0b5e40;
+  --green-600:    #12855a;
+  --green-500:    #17a06c;
+  --green-400:    #34c77b;
+  --green-300:    #86e0ac;
+
+  --red-500:      #e14b3c;
+  --red-700:      #a8332a;
+  --red-100:      #fde9e6;
+  --amber-500:    #ec9f2e;
+  --amber-700:    #a86a12;
+  --amber-100:    #fdf1dc;
+  --info-600:     #2f6fd6;
+  --info-100:     #e9f0fd;
+
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+
+  --shadow-card: 0 1px 2px rgba(14,38,33,.04), 0 12px 28px -14px rgba(14,38,33,.14);
+  --ease: cubic-bezier(.22,1,.36,1);
+}
+
+/* ---------------- Page shell ---------------- */
+.result-container{
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 28px 80px;
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+.back{
+  color: var(--green-800);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  transition: transform .18s var(--ease);
+}
+.back:hover{ transform: translateX(-3px); }
+
+/* ---------------- Severity header ---------------- */
+.result-header{
+  padding: 30px 26px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+  text-align: center;
+  color: var(--white);
+  position: relative;
+  overflow: hidden;
+}
+.result-header::before{
+  content:"";
+  position:absolute; inset:0;
+  background-image: linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px);
+  background-size: 30px 30px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 0%, black, transparent 80%);
+          mask-image: radial-gradient(ellipse 70% 100% at 50% 0%, black, transparent 80%);
+}
+.result-header > *{ position: relative; }
+.result-header h1{
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  letter-spacing: -0.01em;
+}
+.result-header p{ margin: 8px 0 0; font-family: var(--font-mono); font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; opacity: .92; }
+
+.severity-red{ background: linear-gradient(135deg, var(--red-500), var(--red-700)); }
+.severity-yellow{ background: linear-gradient(135deg, var(--amber-500), #c47f18); color: var(--ink); }
+.severity-yellow p{ opacity: .78; }
+.severity-green{ background: linear-gradient(135deg, var(--green-500), var(--green-800)); }
+
+/* ---------------- AI badge ---------------- */
+.ai-badge{
+  background: var(--info-100);
+  color: var(--info-600);
+  padding: 11px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 22px;
+  text-align: center;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  border: 1px solid #bcd3f8;
+}
+.ai-badge strong{ font-family: var(--font-body); font-weight: 700; }
+
+/* ---------------- Cards ---------------- */
+.card{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 22px 22px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-card);
+}
+.card h2{
+  font-family: var(--font-display);
+  font-size: 17px;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+.card h3{
+  font-family: var(--font-display);
+  font-size: 15px;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+.card p{ font-size: 13.5px; color: var(--ink-muted); margin: 0 0 6px; }
+.card p strong{ color: var(--ink); font-weight: 600; }
+.card ul, .card ol{ margin: 0; padding-left: 20px; }
+.card li{ padding: 5px 0; font-size: 13.5px; color: var(--ink-muted); line-height: 1.5; }
+.card li strong{ color: var(--ink); font-weight: 600; }
+
+.result-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+.result-grid .card{ margin-bottom: 0; }
+
+/* ---------------- Emergency care ---------------- */
+.emergency-care-card{
+  border: 2px solid var(--red-500);
+  background: var(--red-100);
+}
+.care-note{
+  color: var(--red-700);
+  font-weight: 600;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+}
+.care-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.care-section{
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+}
+.care-steps li{
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+.care-steps li:last-child{ border-bottom: none; }
+.red-flag-item{ color: var(--red-500); font-weight: 600; }
+.red-flag-item::before{ content: "⚠️ "; }
+
+/* ---------------- Alert ---------------- */
+.alert{
+  font-size: 14px;
+  font-weight: 500;
+  padding: 15px 18px;
+  border-radius: var(--radius-sm);
+  margin-top: 20px;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.alert-danger{ background: var(--red-100); color: var(--red-700); border-color: #f6bdb5; }
+.alert-danger strong{ color: var(--red-500); }
+
+/* ---------------- Actions ---------------- */
+.result-actions{ display: flex; gap: 14px; margin-top: 26px; }
+.btn{
+  font-family: var(--font-body);
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 12px 22px;
+  font-size: 14.5px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform .15s var(--ease), box-shadow .15s var(--ease), background .15s var(--ease), border-color .15s var(--ease);
+}
+.btn-primary{
+  background: linear-gradient(180deg, var(--green-500), var(--green-800));
+  color: var(--white);
+  box-shadow: 0 1px 1px rgba(10,77,54,.2), 0 8px 16px -8px rgba(10,77,54,.5);
+}
+.btn-primary:hover{ transform: translateY(-1px); box-shadow: 0 1px 1px rgba(10,77,54,.25), 0 12px 20px -8px rgba(10,77,54,.55); }
+.btn-secondary{ background: var(--white); color: var(--ink-muted); border-color: var(--line-strong); }
+.btn-secondary:hover{ background: var(--mint-50); border-color: var(--ink-faint); }
+
+/* ---------------- Print ---------------- */
+@media print{
+  .back, .result-actions{ display: none; }
+  .card, .result-header, .emergency-care-card{ box-shadow: none; }
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 720px){
+  .result-grid, .care-grid{ grid-template-columns: 1fr; }
+  .result-actions{ flex-direction: column; }
+}

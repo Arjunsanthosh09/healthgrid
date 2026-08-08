@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register a hospital — HealthGrid</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="auth-shell">
+  <aside class="auth-side">
+    <a href="{{ url_for('index') }}" class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 30 30" width="30" height="30"><rect x="1" y="1" width="28" height="28" rx="8" fill="#ffffff"/><path d="M6 15 H11 L13 9 L17 21 L19 15 H24" fill="none" stroke="#0b5e40" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      HealthGrid
+    </a>
+    <div class="auth-copy">
+      <span class="eyebrow">Hospital registration</span>
+      <h2>Turn your ER into a voice-triage, real-time-alert operation.</h2>
+      <p>Hospitals get the full stack: voice symptom triage, severity scoring, and instant Red-case alerts to on-duty staff and the health department.</p>
+      <div class="auth-stats">
+        <div><b>Red / Yellow / Green</b><span>severity scoring</span></div>
+        <div><b>&lt; 1 min</b><span>alert to on-duty doctor</span></div>
+      </div>
+    </div>
+    <div></div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card" style="max-width:480px;">
+      <a href="{{ url_for('register') }}" class="back">← Choose a different account type</a>
+      <span class="form-badge">🏨 Hospital account</span>
+      <h1>Register your hospital</h1>
+      <p class="lede">Include your ER details so voice triage and alerts route to the right team from day one.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('register_hospital') }}" novalidate>
+        <div class="field">
+          <label for="hs-name">Hospital name</label>
+          <input class="input" type="text" id="hs-name" name="facility_name" placeholder="e.g. Jaipur General Hospital" required>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="hs-license">Hospital license no.</label>
+            <input class="input" type="text" id="hs-license" name="license_no" placeholder="RJ-HSP-0000" required>
+          </div>
+          <div class="field">
+            <label for="hs-beds">Total bed capacity</label>
+            <input class="input" type="number" min="1" id="hs-beds" name="bed_capacity" placeholder="e.g. 220" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="hs-address">Hospital address</label>
+          <textarea class="input" id="hs-address" name="facility_address" rows="2" placeholder="Street, city, state, PIN code" required></textarea>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="hs-city">City</label>
+            <input class="input" type="text" id="hs-city" name="facility_city" placeholder="e.g. Jaipur" required>
+          </div>
+          <div class="field">
+            <label for="hs-state">State</label>
+            <input class="input" type="text" id="hs-state" name="facility_state" placeholder="e.g. Rajasthan" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="hs-pincode">PIN code</label>
+          <input class="input" type="text" id="hs-pincode" name="facility_pincode" placeholder="e.g. 302001" required>
+        </div>
+
+        <div class="field">
+          <label>Departments to activate on HealthGrid</label>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;">
+            <label style="display:flex; align-items:center; gap:6px; font-size:13.5px;"><input type="checkbox" name="departments" value="er" checked> Emergency (ER)</label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13.5px;"><input type="checkbox" name="departments" value="icu"> ICU</label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13.5px;"><input type="checkbox" name="departments" value="outpatient"> Outpatient</label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13.5px;"><input type="checkbox" name="departments" value="pharmacy"> Pharmacy</label>
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="hs-admin">Administrator's full name</label>
+            <input class="input" type="text" id="hs-admin" name="full_name" placeholder="Dr. Vikram Singh" required>
+          </div>
+          <div class="field">
+            <label for="hs-phone">Contact phone</label>
+            <input class="input" type="tel" id="hs-phone" name="facility_phone" placeholder="+91 00000 00000" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="hs-email">Work email <span class="hint">— used for verification</span></label>
+          <input class="input" type="email" id="hs-email" name="email" placeholder="admin@hospital.org" required>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="hs-pw">Create password</label>
+            <input class="input" type="password" id="hs-pw" name="password" placeholder="••••••••" required>
+          </div>
+          <div class="field">
+            <label for="hs-pw2">Confirm password</label>
+            <input class="input" type="password" id="hs-pw2" name="confirm_password" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <div class="check-row">
+          <input type="checkbox" id="hs-terms" name="agreement" value="yes" required>
+          <label for="hs-terms">I confirm I'm authorized to register this hospital and agree to the <a href="#">Terms</a> and <a href="#">Data Processing Agreement</a>.</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Submit hospital for verification</button>
+      </form>
+
+      <div class="switch-line">Already registered? <a href="{{ url_for('login') }}">Log in</a></div>
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

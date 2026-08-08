@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — HealthGrid</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="auth-shell">
+  <aside class="auth-side">
+    <a href="{{ url_for('index') }}" class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 30 30" width="30" height="30"><rect x="1" y="1" width="28" height="28" rx="8" fill="#ffffff"/><path d="M6 15 H11 L13 9 L17 21 L19 15 H24" fill="none" stroke="#0b5e40" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      HealthGrid
+    </a>
+    <div class="auth-copy">
+      <span class="eyebrow">Get started</span>
+      <h2>One account type. One clear path forward.</h2>
+      <p>Register your facility or your department role. Doctors and staff are added by their facility admin after verification.</p>
+      <div class="auth-stats">
+        <div><b>2</b><span>facility types</span></div>
+        <div><b>1</b><span>individual role</span></div>
+        <div><b>24–48h</b><span>verification</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <a href="{{ url_for('index') }}" class="back">← Back to home</a>
+      <h1>Create an account</h1>
+      <p class="lede">Choose the account type that matches what you're registering.</p>
+
+      <div class="role-select-grid">
+        <!-- Clinic -->
+        <a class="role-select" href="{{ url_for('register_clinic') }}">
+          <span class="rs-icon">🏥</span>
+          <span class="rs-text">
+            <b>Register a clinic</b>
+            <span>For clinic administrators. After verification, you can add your doctors and staff.</span>
+          </span>
+          <span class="rs-arrow">→</span>
+        </a>
+
+        <!-- Hospital -->
+        <a class="role-select" href="{{ url_for('register_hospital') }}">
+          <span class="rs-icon">🏨</span>
+          <span class="rs-text">
+            <b>Register a hospital</b>
+            <span>For hospital administrators. Get full ER triage, and add all your doctors.</span>
+          </span>
+          <span class="rs-arrow">→</span>
+        </a>
+
+        <!-- Health Department Officer -->
+        <a class="role-select" href="{{ url_for('register_user') }}">
+          <span class="rs-icon">🏛️</span>
+          <span class="rs-text">
+            <b>Health department officer</b>
+            <span>For government health officers monitoring community outbreaks and facility safety.</span>
+          </span>
+          <span class="rs-arrow">→</span>
+        </a>
+      </div>
+
+      <div class="switch-line">
+        Already have an account? <a href="{{ url_for('login') }}">Log in</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

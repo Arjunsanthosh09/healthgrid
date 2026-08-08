@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register a clinic — HealthGrid</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="auth-shell">
+  <aside class="auth-side">
+    <a href="{{ url_for('index') }}" class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 30 30" width="30" height="30"><rect x="1" y="1" width="28" height="28" rx="8" fill="#ffffff"/><path d="M6 15 H11 L13 9 L17 21 L19 15 H24" fill="none" stroke="#0b5e40" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      HealthGrid
+    </a>
+    <div class="auth-copy">
+      <span class="eyebrow">Clinic registration</span>
+      <h2>Give every doctor in your clinic a full patient timeline.</h2>
+      <p>Once verified, your clinic's doctors get the disease timeline and prescription safety checker under one shared, encrypted record.</p>
+      <div class="auth-stats">
+        <div><b>1–2 days</b><span>verification time</span></div>
+        <div><b>5</b><span>prescription safety checks</span></div>
+      </div>
+    </div>
+    <div></div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card" style="max-width:480px;">
+      <a href="{{ url_for('register') }}" class="back">← Choose a different account type</a>
+      <span class="form-badge">🏥 Clinic account</span>
+      <h1>Register your clinic</h1>
+      <p class="lede">We'll verify your registration or license number before activating shared access.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('register_clinic') }}" novalidate>
+        <div class="field">
+          <label for="cl-name">Clinic name</label>
+          <input class="input" type="text" id="cl-name" name="facility_name" placeholder="e.g. Sundar Family Clinic" required>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="cl-license">Clinic registration / license no.</label>
+            <input class="input" type="text" id="cl-license" name="license_no" placeholder="RJ-CL-0000" required>
+          </div>
+          <div class="field">
+            <label for="cl-specialty">Primary specialty</label>
+            <select class="input" id="cl-specialty" name="specialty">
+              <option value="">General practice</option>
+              <option value="internal_medicine">Internal medicine</option>
+              <option value="pediatrics">Pediatrics</option>
+              <option value="obgyn">OB/GYN</option>
+              <option value="diagnostics">Diagnostics</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="cl-address">Clinic address</label>
+          <textarea class="input" id="cl-address" name="facility_address" rows="2" placeholder="Street, city, state, PIN code" required></textarea>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="cl-city">City</label>
+            <input class="input" type="text" id="cl-city" name="facility_city" placeholder="e.g. Jaipur" required>
+          </div>
+          <div class="field">
+            <label for="cl-state">State</label>
+            <input class="input" type="text" id="cl-state" name="facility_state" placeholder="e.g. Rajasthan" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="cl-pincode">PIN code</label>
+          <input class="input" type="text" id="cl-pincode" name="facility_pincode" placeholder="e.g. 302001" required>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="cl-admin">Administrator's full name</label>
+            <input class="input" type="text" id="cl-admin" name="full_name" placeholder="Dr. Anita Rao" required>
+          </div>
+          <div class="field">
+            <label for="cl-phone">Contact phone</label>
+            <input class="input" type="tel" id="cl-phone" name="facility_phone" placeholder="+91 00000 00000" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="cl-email">Work email <span class="hint">— used for verification</span></label>
+          <input class="input" type="email" id="cl-email" name="email" placeholder="admin@clinic.org" required>
+        </div>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="cl-pw">Create password</label>
+            <input class="input" type="password" id="cl-pw" name="password" placeholder="••••••••" required>
+          </div>
+          <div class="field">
+            <label for="cl-pw2">Confirm password</label>
+            <input class="input" type="password" id="cl-pw2" name="confirm_password" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <div class="check-row">
+          <input type="checkbox" id="cl-terms" name="agreement" value="yes" required>
+          <label for="cl-terms">I confirm I'm authorized to register this clinic and agree to the <a href="#">Terms</a> and <a href="#">Data Processing Agreement</a>.</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Submit clinic for verification</button>
+      </form>
+
+      <div class="switch-line">Already registered? <a href="{{ url_for('login') }}">Log in</a></div>
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

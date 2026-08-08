@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/doctordash.css') }}">
+{% endblock %}
+
+{% block title %}Doctor Dashboard — HealthGrid{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>🩺 Doctor Dashboard</h1>
+            <p>Manage your patients, prescriptions, and medical timelines</p>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Stats Overview -->
+    <div class="stats-bar">
+        <div class="stat-card">
+            <h3>{{ patients|length }}</h3>
+            <span>Assigned Patients</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ patients|selectattr('chronic_conditions')|list|length }}</h3>
+            <span>Chronic Cases</span>
+        </div>
+        <div class="stat-card">
+            <h3>Today</h3>
+            <span>{{ patients|length }} active</span>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <h2>⚡ Quick Actions</h2>
+        <div class="quick-actions">
+            <a href="{{ url_for('patient_timeline') }}" class="action-card">
+                <span class="action-icon">📊</span>
+                <h4>Disease Timeline</h4>
+                <p>View patient history & AI risk predictions</p>
+            </a>
+            <a href="{{ url_for('prescription_check') }}" class="action-card">
+                <span class="action-icon">💊</span>
+                <h4>Prescription Checker</h4>
+                <p>AI-powered drug safety verification</p>
+            </a>
+            <div class="action-card" onclick="alert('Coming soon!')">
+                <span class="action-icon">📝</span>
+                <h4>SOAP Notes</h4>
+                <p>Write clinical notes</p>
+            </div>
+            <div class="action-card" onclick="alert('Coming soon!')">
+                <span class="action-icon">📅</span>
+                <h4>Appointments</h4>
+                <p>View today's schedule</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Patients -->
+    <div class="card">
+        <h2>👥 My Patients</h2>
+        {% if patients %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Age/Gender</th>
+                    <th>Blood Group</th>
+                    <th>Allergies</th>
+                    <th>Chronic Conditions</th>
+                    <th>Assigned Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td><strong>{{ patient.full_name }}</strong></td>
+                    <td>{{ patient.age or '—' }} / {{ patient.gender or '—' }}</td>
+                    <td><span class="badge badge-blue">{{ patient.blood_group or 'Unknown' }}</span></td>
+                    <td>
+                        {% if patient.allergies %}
+                            <span class="badge badge-danger">{{ patient.allergies[:30] }}{% if patient.allergies|length > 30 %}...{% endif %}</span>
+                        {% else %}
+                            <span class="text-muted">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if patient.chronic_conditions %}
+                            <span class="badge badge-warning">{{ patient.chronic_conditions[:30] }}{% if patient.chronic_conditions|length > 30 %}...{% endif %}</span>
+                        {% else %}
+                            <span class="text-muted">None</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ patient.assigned_date.strftime('%d-%m-%Y') if patient.assigned_date else '—' }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('patient_timeline') }}" style="display:inline;">
+                            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                            <button type="submit" class="btn btn-sm btn-primary">📊 Timeline</button>
+                        </form>
+                        <form method="GET" action="{{ url_for('prescription_check') }}" style="display:inline;">
+                            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                            <button type="submit" class="btn btn-sm btn-success">💊 Prescribe</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <span style="font-size:3rem;">👥</span>
+            <h3>No Patients Assigned</h3>
+            <p>Patients will appear here once the hospital admin assigns them to you.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+        <h2>🕐 Recent Activity</h2>
+        <div class="activity-list">
+            <div class="activity-item">
+                <span class="activity-time">Today</span>
+                <span class="activity-text">{{ patients|length }} active patients under your care</span>
+            </div>
+            {% for patient in patients[:3] %}
+            <div class="activity-item">
+                <span class="activity-time">{{ patient.assigned_date.strftime('%d %b') if patient.assigned_date else 'Recent' }}</span>
+                <span class="activity-text">{{ patient.full_name }} assigned to you</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

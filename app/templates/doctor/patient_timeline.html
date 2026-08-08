@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/timeline.css') }}">
+{% endblock %}
+
+{% block title %}Disease Timeline — HealthGrid{% endblock %}
+
+{% block content %}
+<div class="timeline-container">
+    <div class="page-header">
+        <h1>📊 Disease Timeline</h1>
+        <p>Visual progression of patient's health with AI-powered future risk prediction</p>
+    </div>
+
+    <!-- Patient Search -->
+    <div class="card">
+        <h3>🔍 Search Patient</h3>
+        <form method="POST" action="{{ url_for('patient_timeline') }}" class="search-form">
+            <div class="form-row">
+                <div class="field">
+                    <label for="patient_id">Patient ID</label>
+                    <input class="input" type="number" id="patient_id" name="patient_id" placeholder="Enter patient ID" required>
+                </div>
+                <div class="field">
+                    <button type="submit" class="btn btn-primary" style="margin-top:24px;">🔍 Load Timeline</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if patient %}
+    <!-- Patient Info Card -->
+    <div class="card patient-card">
+        <div class="patient-header">
+            <h2>👤 {{ patient.full_name }}</h2>
+            <span class="badge badge-primary">ID: {{ patient.id }}</span>
+        </div>
+        <div class="patient-info-grid">
+            <div class="info-item"><strong>Age:</strong> {{ patient.age or 'N/A' }}</div>
+            <div class="info-item"><strong>Gender:</strong> {{ patient.gender or 'N/A' }}</div>
+            <div class="info-item"><strong>Blood Group:</strong> {{ patient.blood_group or 'N/A' }}</div>
+            <div class="info-item"><strong>Allergies:</strong> <span class="allergy-tag">{{ patient.allergies or 'None' }}</span></div>
+            <div class="info-item"><strong>Chronic Conditions:</strong> {{ patient.chronic_conditions or 'None' }}</div>
+            <div class="info-item"><strong>Emergency Contact:</strong> {{ patient.emergency_contact_name or 'N/A' }} — {{ patient.emergency_contact_phone or '' }}</div>
+        </div>
+    </div>
+
+    <!-- AI Risk Prediction -->
+    {% if risk_prediction %}
+    <div class="card risk-card">
+        <h3>🔮 AI-Powered Future Risk Prediction</h3>
+        <div class="risk-header">
+            <div class="risk-score-display">
+                <div class="risk-circle risk-{{ risk_prediction.risk_level.lower() }}">
+                    <span class="risk-number">{{ risk_prediction.overall_score }}%</span>
+                    <span class="risk-label">{{ risk_prediction.risk_level }} Risk</span>
+                </div>
+            </div>
+            <div class="risk-summary">
+                <p><strong>🤖 AI Summary:</strong> {{ risk_prediction.summary }}</p>
+            </div>
+        </div>
+        
+        <h4>⚠️ Predicted Health Risks</h4>
+        <div class="risk-grid">
+            {% for risk in risk_prediction.risks %}
+            <div class="risk-item">
+                <h4>{{ risk.condition }}</h4>
+                <div class="risk-detail">
+                    <span><strong>Probability:</strong> <span class="badge badge-{{ 'danger' if risk.probability == 'High' else 'warning' if risk.probability == 'Medium' else 'success' }}">{{ risk.probability }}</span></span>
+                    <span><strong>Timeframe:</strong> {{ risk.timeframe }}</span>
+                </div>
+                <p><strong>💡 Recommendation:</strong> {{ risk.recommendation }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Add Event Button -->
+    <button onclick="toggleAddEvent()" class="btn btn-primary btn-lg" style="margin-bottom:15px;">➕ Add Medical Event</button>
+
+    <!-- Add Event Form (Hidden by default) -->
+    <div id="add-event-form" class="card" style="display:none;">
+        <h3>📝 Add New Medical Event</h3>
+        <form method="POST" action="{{ url_for('add_timeline_event') }}" enctype="multipart/form-data">
+            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+            
+            <div class="form-row">
+                <div class="field">
+                    <label for="event_date">Event Date</label>
+                    <input class="input" type="date" id="event_date" name="event_date" required>
+                </div>
+                <div class="field">
+                    <label for="event_type">Event Type</label>
+                    <select class="input" id="event_type" name="event_type" required>
+                        <option value="">Select type...</option>
+                        <option value="symptom">🩺 Symptom</option>
+                        <option value="diagnosis">🏥 Diagnosis</option>
+                        <option value="test">🔬 Test / Lab Report</option>
+                        <option value="prescription">💊 Prescription</option>
+                        <option value="procedure">⚕️ Procedure / Surgery</option>
+                        <option value="hospitalization">🏨 Hospitalization</option>
+                        <option value="note">📝 Clinical Note</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="field">
+                <label for="title">Title</label>
+                <input class="input" type="text" id="title" name="title" placeholder="e.g. Blood Test — HbA1c & Lipid Profile" required>
+            </div>
+            
+            <div class="field">
+                <label for="description">Description / Results</label>
+                <textarea class="input" id="description" name="description" rows="3" 
+                    placeholder="e.g. HbA1c: 8.2% (Elevated — target <7%), Fasting Glucose: 145 mg/dL, Total Cholesterol: 220 mg/dL, LDL: 150 mg/dL"></textarea>
+            </div>
+            
+            <div class="field">
+                <label for="report_file">Upload Report (PDF/Image)</label>
+                <input class="input" type="file" id="report_file" name="report_file" accept=".pdf,.jpg,.jpeg,.png">
+                <small>Accepted: PDF, JPG, PNG (Max 10MB)</small>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <button type="submit" class="btn btn-success">💾 Save Event</button>
+                <button type="button" onclick="toggleAddEvent()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Visual Timeline -->
+    <div class="card">
+        <h3>📅 Disease Progression Timeline</h3>
+        {% if timeline_data %}
+        <div class="visual-timeline">
+            {% for event in timeline_data %}
+            <div class="timeline-event">
+                <div class="timeline-dot event-{{ event.event_type }}"></div>
+                <div class="timeline-content">
+                    <div class="timeline-date">{{ event.event_date.strftime('%d %B %Y') if event.event_date else 'Unknown date' }}</div>
+                    <div class="timeline-header">
+                        <h4>{{ event.title }}</h4>
+                        <span class="badge event-type-badge event-type-{{ event.event_type }}">
+                            {% if event.event_type == 'symptom' %}🩺 Symptom
+                            {% elif event.event_type == 'diagnosis' %}🏥 Diagnosis
+                            {% elif event.event_type == 'test' %}🔬 Lab/Test
+                            {% elif event.event_type == 'prescription' %}💊 Prescription
+                            {% elif event.event_type == 'procedure' %}⚕️ Procedure
+                            {% elif event.event_type == 'hospitalization' %}🏨 Hospitalization
+                            {% else %}📝 Note{% endif %}
+                        </span>
+                    </div>
+                    {% if event.description %}
+                    <p class="timeline-desc">{{ event.description }}</p>
+                    {% endif %}
+                    {% if event.report_file_path %}
+                    <a href="{{ url_for('static', filename='uploads/' + event.report_file_path) }}" 
+                       target="_blank" class="btn btn-sm btn-outline">📄 View Report</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <span style="font-size:3rem;">📋</span>
+            <h3>No Medical Events Yet</h3>
+            <p>Start building the patient's timeline by adding lab reports, diagnoses, and prescriptions.</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleAddEvent() {
+    const form = document.getElementById('add-event-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

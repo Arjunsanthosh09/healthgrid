@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Zone Watch — HealthGrid{% endblock %}
+{% block content %}
+<div class="container" style="max-width:1100px; margin:0 auto; padding:20px;">
+    <div class="page-header">
+        <h1>🗺️ Zone Watch — Community Health Monitor</h1>
+        <p>AI-powered outbreak detection and real-time community health surveillance</p>
+    </div>
+
+    <!-- ✅ AI OUTBREAK ANALYSIS -->
+    {% if ai_analysis %}
+    <div class="card ai-card">
+        <h3>🤖 AI Outbreak Analysis</h3>
+        <p><strong>📊 Trend:</strong> {{ ai_analysis.trend_analysis }}</p>
+        <p><strong>🎯 Confidence:</strong> {{ ai_analysis.confidence }}%</p>
+        
+        {% if ai_analysis.outbreak_alerts %}
+        <h4>🚨 Detected Outbreaks</h4>
+        {% for alert in ai_analysis.outbreak_alerts %}
+        <div class="alert alert-danger">
+            <strong>{{ alert.location }}</strong> — {{ alert.condition }} (Risk: <strong>{{ alert.risk_level }}</strong>)
+            <br><small>{{ alert.action_required }}</small>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        {% if ai_analysis.recommendations %}
+        <h4>📋 AI Recommendations</h4>
+        <ul>
+            {% for rec in ai_analysis.recommendations %}
+            <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat-card stat-red">
+            <h3>{{ city_stats|sum(attribute='critical') }}</h3>
+            <span>🔴 Critical (7 days)</span>
+        </div>
+        <div class="stat-card stat-yellow">
+            <h3>{{ city_stats|sum(attribute='urgent') }}</h3>
+            <span>🟡 Urgent</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ clusters|length }}</h3>
+            <span>📍 Symptom Clusters</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ alerts|length }}</h3>
+            <span>🚨 Active Alerts</span>
+        </div>
+    </div>
+    
+    <!-- Outbreak Clusters -->
+    <div class="card">
+        <h2>🚨 Potential Outbreak Clusters</h2>
+        {% if clusters %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Condition</th>
+                    <th>City</th>
+                    <th>Cases</th>
+                    <th>Latest</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in clusters %}
+                <tr>
+                    <td><strong>{{ c.predicted_condition or 'Unknown' }}</strong></td>
+                    <td>{{ c.city }}, {{ c.state }}</td>
+                    <td><span class="badge badge-red">{{ c.case_count }}</span></td>
+                    <td>{{ c.latest_case.strftime('%d %b %H:%M') if c.latest_case else '—' }}</td>
+                    <td><button class="btn btn-sm btn-danger">🔍 Investigate</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <span>✅</span>
+            <p>No clusters detected. Community health is stable.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- City-wise Breakdown -->
+    <div class="card">
+        <h2>🏙️ City-wise Case Breakdown</h2>
+        {% if city_stats %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>City</th>
+                    <th>Total</th>
+                    <th>Critical</th>
+                    <th>Urgent</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cs in city_stats %}
+                <tr>
+                    <td>{{ cs.city }}, {{ cs.state }}</td>
+                    <td><strong>{{ cs.total_cases }}</strong></td>
+                    <td>{{ cs.critical }}</td>
+                    <td>{{ cs.urgent }}</td>
+                    <td>
+                        {% if cs.critical > 3 %}
+                            <span class="badge badge-red">🚨 Alert</span>
+                        {% elif cs.critical > 0 %}
+                            <span class="badge badge-yellow">⚠️ Watch</span>
+                        {% else %}
+                            <span class="badge badge-green">✅ Normal</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No data available for this period.</p>
+        {% endif %}
+    </div>
+
+    <!-- Active Alerts -->
+    {% if alerts %}
+    <div class="card">
+        <h2>🔔 Recent Alerts</h2>
+        {% for alert in alerts %}
+        <div class="alert alert-{{ 'danger' if alert.severity == 'red' else 'warning' }}">
+            <strong>{{ alert.title }}</strong>
+            <p>{{ alert.message[:100] }}{% if alert.message|length > 100 %}...{% endif %}</p>
+            <small>{{ alert.created_at.strftime('%d %b %Y, %H:%M') if alert.created_at else '' }}</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.page-header { margin-bottom: 25px; }
+.page-header h1 { color: #0b5e40; margin: 0; }
+.page-header p { color: #666; margin: 5px 0 0 0; }
+
+.ai-card { border-left: 4px solid #6f42c1; background: linear-gradient(135deg, #f8f9ff, #fff); }
+.ai-card h3 { color: #6f42c1; }
+
+.stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
+.stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; text-align: center; }
+.stat-card h3 { font-size: 2rem; color: #0b5e40; margin: 0; }
+.stat-card span { color: #666; font-size: 0.9rem; }
+.stat-red { border-top: 4px solid #dc3545; }
+.stat-yellow { border-top: 4px solid #ffc107; }
+
+.card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
+.card h2 { margin-top: 0; color: #0b5e40; }
+
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th { background: #0b5e40; color: white; padding: 10px 12px; text-align: left; font-size: 0.9rem; }
+.admin-table td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+.admin-table tr:hover { background: #f8f9fa; }
+
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block; }
+.badge-red { background: #f8d7da; color: #721c24; }
+.badge-yellow { background: #fff3cd; color: #856404; }
+.badge-green { background: #d4edda; color: #155724; }
+
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+.btn-danger { background: #dc3545; color: white; }
+.btn-sm { padding: 5px 10px; font-size: 0.8rem; }
+
+.alert { padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; }
+.alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+.empty-state { text-align: center; padding: 30px; color: #666; }
+.empty-state span { font-size: 2rem; display: block; margin-bottom: 10px; }
+
+.text-muted { color: #999; font-style: italic; }
+</style>
+{% endblock %}

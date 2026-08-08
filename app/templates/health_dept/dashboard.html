@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Health Command — HealthGrid{% endblock %}
+{% block content %}
+<div class="dashboard-container">
+    <h1>🏛️ Health Command Dashboard</h1>
+    
+    <div class="stats-bar">
+        <div class="stat-card"><h3>{{ total_week }}</h3><span>Cases (7 days)</span></div>
+        <div class="stat-card stat-red"><h3>{{ critical }}</h3><span>🔴 Critical</span></div>
+        <div class="stat-card"><h3>{{ total_facilities }}</h3><span>🏥 Facilities</span></div>
+    </div>
+
+    <!-- ✅ AI ANALYSIS GOES HERE -->
+    {% if ai_analysis %}
+    <div class="card" style="border-left: 4px solid #6f42c1;">
+        <h3>🤖 AI Outbreak Analysis</h3>
+        <p><strong>Trend:</strong> {{ ai_analysis.trend_analysis }}</p>
+        <p><strong>Confidence:</strong> {{ ai_analysis.confidence }}%</p>
+        
+        {% if ai_analysis.outbreak_alerts %}
+        <h4>🚨 Detected Outbreaks</h4>
+        {% for alert in ai_analysis.outbreak_alerts %}
+        <div class="alert alert-danger">
+            <strong>{{ alert.location }}</strong> — {{ alert.condition }} (Risk: {{ alert.risk_level }})
+            <br><small>{{ alert.action_required }}</small>
+        </div>
+        {% endfor %}
+        {% endif %}
+        
+        {% if ai_analysis.recommendations %}
+        <h4>📋 Recommendations</h4>
+        <ul>
+            {% for rec in ai_analysis.recommendations %}
+            <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Rest of dashboard content -->
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admindash.css') }}">
+{% endblock %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1>Admin Dashboard</h1>
+    <p>Manage registration requests</p>
+
+    <div class="stats-bar">
+        <div class="stat-card">
+            <h3>{{ requests|selectattr('status', 'equalto', 'pending')|list|length }}</h3>
+            <span>Pending</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ requests|selectattr('status', 'equalto', 'approved')|list|length }}</h3>
+            <span>Approved</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ requests|selectattr('status', 'equalto', 'rejected')|list|length }}</h3>
+            <span>Rejected</span>
+        </div>
+    </div>
+
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Facility</th>
+                <th>City</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr>
+                <td>{{ req.full_name }}</td>
+                <td>{{ req.email }}</td>
+                <td>{{ req.role }}</td>
+                <td>{{ req.facility_name or '-' }}</td>
+                <td>{{ req.facility_city or '-' }}</td>
+                <td>{{ req.created_at.strftime('%d-%m-%Y') if req.created_at else '-' }}</td>
+                <td><span class="badge badge-{{ req.status }}">{{ req.status }}</span></td>
+                <td>
+                    {% if req.status == 'pending' %}
+                    <form method="POST" action="{{ url_for('approve_registration', request_id=req.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('reject_registration', request_id=req.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                    {% else %}
+                    <span>—</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" style="text-align:center; padding:36px 18px; color: var(--ink-faint); font-family: var(--font-mono); font-size: 13px;">
+                    No registration requests yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

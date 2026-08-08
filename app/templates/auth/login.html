@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — HealthGrid</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="auth-shell">
+  <!-- Left: brand panel -->
+  <aside class="auth-side">
+    <a href="{{ url_for('index') }}" class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 30 30" width="30" height="30"><rect x="1" y="1" width="28" height="28" rx="8" fill="#ffffff"/><path d="M6 15 H11 L13 9 L17 21 L19 15 H24" fill="none" stroke="#0b5e40" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      HealthGrid
+    </a>
+
+    <div class="auth-copy">
+      <span class="eyebrow">Welcome back</span>
+      <h2>One login. Every role your work touches.</h2>
+      <p>Whether you're triaging at the bedside, reviewing a timeline, or watching the map for the whole region — it's the same grid, the same login.</p>
+      <div class="auth-stats">
+        <div><b>&lt; 90s</b><span>avg. voice triage</span></div>
+        <div><b>24/7</b><span>outbreak monitoring</span></div>
+        <div><b>0</b><span>silos between teams</span></div>
+      </div>
+    </div>
+
+    <div style="position:relative;">
+      <svg viewBox="0 0 300 60" width="220" height="46" style="opacity:.85;">
+        <polyline points="0,40 40,40 55,10 70,50 85,25 100,40 140,40 155,15 170,45 185,40 300,40" fill="none" stroke="#86e0ac" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </aside>
+
+  <!-- Right: form -->
+  <main class="auth-main">
+    <div class="auth-card">
+      <a href="{{ url_for('index') }}" class="back">← Back to home</a>
+      <h1>Log in to HealthGrid</h1>
+      <p class="lede">Enter your credentials to access your dashboard.</p>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="field">
+          <label for="login-email">Work email</label>
+          <input class="input" type="email" id="login-email" name="email" placeholder="you@facility.org" required>
+        </div>
+
+        <div class="field">
+          <label for="login-pw">Password</label>
+          <div class="input-wrap">
+            <input class="input" type="password" id="login-pw" name="password" placeholder="••••••••" required style="padding-right:56px;">
+            <button type="button" data-pw-toggle="#login-pw" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; font-family:var(--font-mono); font-size:11.5px; color:var(--green-700, var(--green-800)); font-weight:600; cursor:pointer;">Show</button>
+          </div>
+        </div>
+
+        <div class="check-row" style="justify-content:space-between; align-items:center;">
+          <label style="display:flex; align-items:center; gap:8px; margin:0;"><input type="checkbox" name="remember"> Keep me signed in</label>
+          <a href="#" style="font-size:13px; font-weight:600; color: var(--green-800);">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Log in</button>
+      </form>
+
+      <div class="switch-line">
+        New to HealthGrid? <a href="{{ url_for('register') }}">Create an account</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/triage.css') }}">
+{% endblock %}
+
+{% block title %}ER Voice Triage — HealthGrid{% endblock %}
+
+{% block content %}
+<div class="triage-container">
+    <div class="triage-header">
+        <h1>🎤 Emergency Room Voice Triage</h1>
+        <p>Record patient symptoms by voice or type manually. AI will analyze and prioritize.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('triage') }}" enctype="multipart/form-data" id="triage-form">
+    <div class="triage-grid">
+        <!-- Left: Patient Info -->
+        <div class="card">
+            <h3>👤 Patient Information</h3>
+            <div class="form-row">
+                <div class="field">
+                    <label for="patient_name">Patient Name</label>
+                    <input class="input" type="text" id="patient_name" name="patient_name" placeholder="e.g. Rajesh Kumar">
+                </div>
+                <div class="field">
+                    <label for="patient_age">Age</label>
+                    <input class="input" type="number" id="patient_age" name="patient_age" placeholder="e.g. 45" min="0" max="150">
+                </div>
+                <div class="field">
+                    <label for="patient_gender">Gender</label>
+                    <select class="input" id="patient_gender" name="patient_gender">
+                        <option value="">Select</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Symptom Input -->
+        <div class="card">
+            <h3>🎙️ Symptom Input</h3>
+            
+            <!-- Voice Recording -->
+            <div class="voice-section">
+                <button type="button" id="record-btn" class="btn btn-record">
+                    🎤 Start Recording
+                </button>
+                <span id="recording-status" class="recording-status">Ready</span>
+                <audio id="audio-preview" controls style="display:none; width:100%; margin-top:10px;"></audio>
+                <input type="hidden" name="audio_data" id="audio-data">
+            </div>
+            
+            <div class="divider-text">OR</div>
+            
+            <!-- Manual Text Input -->
+            <div class="field">
+                <label for="symptoms_text">Type symptoms manually</label>
+                <textarea class="input" id="symptoms_text" name="symptoms_text" rows="4" 
+                    placeholder="e.g. Patient has severe chest pain, difficulty breathing, sweating since 2 hours..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg btn-block" id="analyze-btn">
+                🔍 Analyze Symptoms & Triage
+            </button>
+        </div>
+    </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+
+const recordBtn = document.getElementById('record-btn');
+const statusSpan = document.getElementById('recording-status');
+const audioPreview = document.getElementById('audio-preview');
+
+recordBtn.addEventListener('click', async () => {
+    if (!isRecording) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+            
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                audioPreview.src = audioUrl;
+                audioPreview.style.display = 'block';
+                
+                const file = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                
+                let fileInput = document.querySelector('input[name="audio_file"]');
+                if (!fileInput) {
+                    fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.name = 'audio_file';
+                    fileInput.style.display = 'none';
+                    document.getElementById('triage-form').appendChild(fileInput);
+                }
+                fileInput.files = dataTransfer.files;
+            };
+            
+            mediaRecorder.start();
+            isRecording = true;
+            recordBtn.textContent = '⏹️ Stop Recording';
+            recordBtn.classList.add('recording');
+            statusSpan.textContent = '🔴 Recording...';
+        } catch (err) {
+            alert('Microphone access denied. Please type symptoms manually.');
+            console.error(err);
+        }
+    } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        recordBtn.textContent = '🎤 Start Recording';
+        recordBtn.classList.remove('recording');
+        statusSpan.textContent = '✅ Recording saved';
+    }
+});
+</script>
+{% endblock %}

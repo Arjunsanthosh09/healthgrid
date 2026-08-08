@@ -1160,22 +1160,38 @@ def doctor_dashboard():
     conn = get_db()
     cur = conn.cursor()
     
-    # Get assigned patients
+    # Patients NOT prescribed today (Waiting List)
     cur.execute("""
         SELECT p.id, p.full_name, p.age, p.gender, p.blood_group, p.allergies,
                p.chronic_conditions, dpa.assigned_date
         FROM patients p
         JOIN doctor_patient_assignments dpa ON p.id = dpa.patient_id
         WHERE dpa.doctor_id = %s AND dpa.status = 'active'
+        AND p.id NOT IN (
+            SELECT patient_id FROM prescriptions 
+            WHERE doctor_id = %s AND prescribed_date = CURDATE()
+        )
         ORDER BY dpa.assigned_date DESC
+    """, (current_user.id, current_user.id))
+    waiting_patients = cur.fetchall()
+    
+    # Patients prescribed today (Completed List)
+    cur.execute("""
+        SELECT p.id, p.full_name, p.age, p.gender, p.blood_group,
+               pr.drugs_json, pr.diagnosis, pr.prescribed_date
+        FROM prescriptions pr
+        JOIN patients p ON pr.patient_id = p.id
+        WHERE pr.doctor_id = %s AND pr.prescribed_date = CURDATE()
+        ORDER BY pr.prescribed_date DESC
     """, (current_user.id,))
-    patients = cur.fetchall()
+    completed_today = cur.fetchall()
     
     cur.close()
     conn.close()
     
-    return render_template('doctor/dashboard.html', patients=patients if patients else [])
-
+    return render_template('doctor/dashboard.html', 
+                         patients=waiting_patients,
+                         completed_today=completed_today)
 # =============================================
 # DOCTOR - PRESCRIPTION SAFETY CHECKER
 # =============================================

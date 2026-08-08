@@ -27,18 +27,17 @@
     <div class="stats-bar">
         <div class="stat-card">
             <h3>{{ patients|length }}</h3>
-            <span>Assigned Patients</span>
+            <span>Waiting Patients</span>
+        </div>
+        <div class="stat-card">
+            <h3>{{ completed_today|length }}</h3>
+            <span>Completed Today</span>
         </div>
         <div class="stat-card">
             <h3>{{ patients|selectattr('chronic_conditions')|list|length }}</h3>
             <span>Chronic Cases</span>
         </div>
-        <div class="stat-card">
-            <h3>Today</h3>
-            <span>{{ patients|length }} active</span>
-        </div>
     </div>
-
 
     <!-- Quick Actions -->
     <div class="card">
@@ -54,22 +53,12 @@
                 <h4>Prescription Checker</h4>
                 <p>AI-powered drug safety verification</p>
             </a>
-            <div class="action-card" onclick="alert('Coming soon!')">
-                <span class="action-icon">📝</span>
-                <h4>SOAP Notes</h4>
-                <p>Write clinical notes</p>
-            </div>
-            <div class="action-card" onclick="alert('Coming soon!')">
-                <span class="action-icon">📅</span>
-                <h4>Appointments</h4>
-                <p>View today's schedule</p>
-            </div>
         </div>
     </div>
 
-    <!-- Assigned Patients -->
+    <!-- Waiting Patients -->
     <div class="card">
-        <h2>👥 My Patients</h2>
+        <h2>👥 Waiting Patients</h2>
         {% if patients %}
         <table class="admin-table">
             <thead>
@@ -91,14 +80,14 @@
                     <td><span class="badge badge-blue">{{ patient.blood_group or 'Unknown' }}</span></td>
                     <td>
                         {% if patient.allergies %}
-                            <span class="badge badge-danger">{{ patient.allergies[:30] }}{% if patient.allergies|length > 30 %}...{% endif %}</span>
+                            <span class="badge badge-danger">{{ patient.allergies[:30] }}</span>
                         {% else %}
                             <span class="text-muted">None</span>
                         {% endif %}
                     </td>
                     <td>
                         {% if patient.chronic_conditions %}
-                            <span class="badge badge-warning">{{ patient.chronic_conditions[:30] }}{% if patient.chronic_conditions|length > 30 %}...{% endif %}</span>
+                            <span class="badge badge-warning">{{ patient.chronic_conditions[:30] }}</span>
                         {% else %}
                             <span class="text-muted">None</span>
                         {% endif %}
@@ -109,61 +98,42 @@
                             <input type="hidden" name="patient_id" value="{{ patient.id }}">
                             <button type="submit" class="btn btn-sm btn-primary">📊 Timeline</button>
                         </form>
-                        <form method="GET" action="{{ url_for('prescription_check') }}" style="display:inline;">
-                            <input type="hidden" name="patient_id" value="{{ patient.id }}">
-                            <button type="submit" class="btn btn-sm btn-success">💊 Prescribe</button>
-                        </form>
+                        <a href="{{ url_for('prescription_check') }}" class="btn btn-sm btn-success">💊 Prescribe</a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% else %}
-        <!-- Completed Today -->
-{% if completed_today %}
-<div class="card">
-    <h2>✅ Completed Today</h2>
-    <table class="admin-table">
-        <thead>
-            <tr><th>Patient</th><th>Age/Gender</th><th>Medication</th><th>Diagnosis</th><th>Time</th></tr>
-        </thead>
-        <tbody>
-            {% for c in completed_today %}
-            <tr>
-                <td><strong>{{ c.full_name }}</strong></td>
-                <td>{{ c.age or '—' }} / {{ c.gender or '—' }}</td>
-                <td>{{ c.drugs_json }}</td>
-                <td>{{ c.diagnosis or '—' }}</td>
-                <td>{{ c.prescribed_date.strftime('%H:%M') if c.prescribed_date else '—' }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
         <div class="empty-state">
-            <span style="font-size:3rem;">👥</span>
-            <h3>No Patients Assigned</h3>
-            <p>Patients will appear here once the hospital admin assigns them to you.</p>
+            <span style="font-size:3rem;">✅</span>
+            <h3>All Done!</h3>
+            <p>No patients waiting. Check completed list below.</p>
         </div>
         {% endif %}
     </div>
 
-    <!-- Recent Activity -->
+    <!-- Completed Today -->
+    {% if completed_today %}
     <div class="card">
-        <h2>🕐 Recent Activity</h2>
-        <div class="activity-list">
-            <div class="activity-item">
-                <span class="activity-time">Today</span>
-                <span class="activity-text">{{ patients|length }} active patients under your care</span>
-            </div>
-            {% for patient in patients[:3] %}
-            <div class="activity-item">
-                <span class="activity-time">{{ patient.assigned_date.strftime('%d %b') if patient.assigned_date else 'Recent' }}</span>
-                <span class="activity-text">{{ patient.full_name }} assigned to you</span>
-            </div>
-            {% endfor %}
-        </div>
+        <h2>✅ Completed Today</h2>
+        <table class="admin-table">
+            <thead>
+                <tr><th>Patient</th><th>Age/Gender</th><th>Medication</th><th>Diagnosis</th><th>Time</th></tr>
+            </thead>
+            <tbody>
+                {% for c in completed_today %}
+                <tr>
+                    <td><strong>{{ c.full_name }}</strong></td>
+                    <td>{{ c.age or '—' }} / {{ c.gender or '—' }}</td>
+                    <td>{{ c.drugs_json }}</td>
+                    <td>{{ c.diagnosis or '—' }}</td>
+                    <td>{{ c.prescribed_date.strftime('%H:%M') if c.prescribed_date else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

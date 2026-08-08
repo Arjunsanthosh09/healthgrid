@@ -1,14 +1,17 @@
 {% extends "base.html" %}
-<div style="margin-bottom:15px;">
-    <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
-</div>
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/prescription.css') }}">
 {% endblock %}
 
 {% block title %}Prescription Safety Checker — HealthGrid{% endblock %}
+
 {% block content %}
 <div class="container">
+    
+    <!-- Back Button -->
+    <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline" style="margin-bottom:15px;">← Back to Dashboard</a>
+    
     <div class="page-header">
         <h1>💊 Prescription Safety Checker</h1>
         <p>AI-powered drug safety verification — checks interactions, allergies, pregnancy risks, and organ function</p>
@@ -53,7 +56,7 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Patient Info (if found) -->
+    <!-- Patient Info -->
     {% if patient %}
     <div class="card patient-card">
         <h3>👤 Patient: {{ patient.full_name }}</h3>
@@ -86,20 +89,17 @@
     </div>
     {% endif %}
 
-    <!-- Save Prescription (only if safe) -->
+    <!-- Save Prescription -->
     {% if patient %}
-
     <div class="card success-card">
         <div class="success-header">
             <span class="success-icon">✅</span>
             <div>
-                <h3>Prescription is Safe!</h3>
-                <p>No safety concerns detected. Save to patient records.</p>
+                <h3>Prescription Review</h3>
+                <p>{% if warnings %}Review warnings above before saving.{% else %}No safety concerns detected. Save to patient records.{% endif %}</p>
             </div>
         </div>
         
-        
-
         <form method="POST" action="{{ url_for('save_prescription') }}" class="save-form">
             <input type="hidden" name="patient_id" value="{{ patient.id }}">
             <input type="hidden" name="drug_name" value="{{ request.form.get('drug_name', '') }}">
@@ -119,7 +119,7 @@
             <div class="form-row">
                 <div class="field">
                     <label>Frequency</label>
-                    <input class="input" name="frequency" placeholder="e.g. Twice daily after meals" required>
+                    <input class="input" name="frequency" placeholder="e.g. Twice daily" required>
                 </div>
                 <div class="field">
                     <label>Duration</label>
@@ -130,30 +130,31 @@
                 <label>Diagnosis / Reason</label>
                 <input class="input" name="diagnosis" placeholder="e.g. Acute musculoskeletal pain" required>
             </div>
-            <button type="submit" class="btn btn-success btn-lg">💾 Save Prescription to Records</button>
+            <button type="submit" class="btn btn-success btn-lg">💾 Save Prescription</button>
         </form>
     </div>
     {% endif %}
 
     <!-- Today's Completed -->
-{% if completed_today %}
-<div class="card">
-    <h3>✅ Completed Today</h3>
-    <table class="admin-table">
-        <thead><tr><th>Patient</th><th>Medication</th><th>Diagnosis</th></tr></thead>
-        <tbody>
-            {% for c in completed_today %}
-            <tr>
-                <td><strong>{{ c.full_name }}</strong></td>
-                <td>{{ c.drugs_json }}</td>
-                <td>{{ c.diagnosis or '—' }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
-    <!-- Quick Reference: Common Drug Interactions -->
+    {% if completed_today %}
+    <div class="card">
+        <h3>✅ Completed Today</h3>
+        <table class="admin-table">
+            <thead><tr><th>Patient</th><th>Medication</th><th>Diagnosis</th></tr></thead>
+            <tbody>
+                {% for c in completed_today %}
+                <tr>
+                    <td><strong>{{ c.full_name }}</strong></td>
+                    <td>{{ c.drugs_json }}</td>
+                    <td>{{ c.diagnosis or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    <!-- Quick Reference -->
     <div class="card reference-card">
         <h3>📚 Common Drug Interaction Reference</h3>
         <div class="reference-grid">

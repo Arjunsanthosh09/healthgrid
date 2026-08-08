@@ -1,4 +1,4 @@
-# 🏥 HealthGrid — AI-Powered Community Health Intelligence Platform
+HealthGrid — AI-Powered Community Health Intelligence Platform
 
 ![HealthGrid Banner](https://img.shields.io/badge/HealthGrid-v1.0-0b5e40)
 ![Python](https://img.shields.io/badge/Python-3.14-blue)
@@ -9,6 +9,8 @@
 > **One platform. ER triage, patient timelines, prescription safety, and outbreak detection — all connected.**
 
 ---
+
+
 
 ## 📖 Table of Contents
 - [Problem Statement](#-problem-statement)
@@ -42,6 +44,7 @@ Healthcare in developing nations operates in disconnected silos:
 
 ---
 
+
 ## 💡 Solution
 
 **HealthGrid** connects ERs, doctors, and health departments on a single, privacy-first AI platform — requiring zero new hardware.
@@ -68,6 +71,14 @@ Healthcare in developing nations operates in disconnected silos:
 
 ---
 
+<img width="1871" height="921" alt="Screenshot 2026-08-08 074355" src="https://github.com/user-attachments/assets/a265cbc1-f43e-4404-8b5b-2c4b95022b3c" />
+<img width="1897" height="953" alt="Screenshot 2026-08-08 074043" src="https://github.com/user-attachments/assets/d1c36085-f30a-45c6-b495-de5ec36cf7cc" />
+<img width="1858" height="952" alt="Screenshot 2026-08-08 074243" src="https://github.com/user-attachments/assets/6d9d2d2f-4a92-45c5-af10-96d2374b48fb" />
+<img width="1697" height="903" alt="Screenshot 2026-08-08 074107" src="https://github.com/user-attachments/assets/6357b2f5-0aa9-436e-acf4-0f80732b416d" />
+<img width="1871" height="921" alt="Screenshot 2026-08-08 074355" src="https://github.com/user-attachments/assets/7de882da-cee7-4151-89e6-8ffc0243881a" />
+<img width="1811" height="847" alt="Screenshot 2026-08-08 074320" src="https://github.com/user-attachments/assets/7e523cc9-f6f7-46f5-8f2e-3ec527b5fa27" />
+
+<img width="1448" height="576" alt="Screenshot 2026-08-07 193837" src="https://github.com/user-attachments/assets/ed3f8b9a-7109-4d5d-b87c-a847c6f7e9a7" /># 🏥 
 ## 🏗️ System Architecture
 
 ```
